@@ -2,13 +2,27 @@
 
 A demo app using SpiceDB.
 
-# To run
+## Why?
+
+Zanzibar’s core promise of global horizontal scalability with strong consistency. It's basically a dynamic programming model where each problem is broken up into smaller problems and cached at each step along the way. Over time, each subset of problems is spread evenly across a distributed cache.
+
+### Caveats
+
+Caveats are statically merged in the sub-problem cache, returning CAVEATED instead of ALLOW or DENY. A CAVEATED result is unioned together with other results, returning a static expression that is then evaluated against user-provided values to determine permission as a final step. 
+
+[Ideal use cases](https://github.com/authzed/spicedb/issues/386):
+- Time: “I want to bound the amount of time that a user has this role”
+- Time: “The cleaning staff should only be allowed to access the office between 5pm and 10pm on weekdays”
+- IP Address: “You can only access this site if you’re not in N.K.”
+- Money: “This user is an approver if the order value is < $50”
+
+## To run
 
 
 
-# To develop
+## To develop
 
-# SpiceDB usage
+## SpiceDB usage
 
 Here are basic commands to use SpiceDB with this project. 
 
@@ -25,7 +39,7 @@ docker run -p 50051:50051 quay.io/authzed/spicedb:latest serve
 If using kubernetes, use the [SpiceDB Operator](https://github.com/authzed/spicedb-operator).
 
 
-## SpiceDB cli usage
+### SpiceDB cli usage
 
 Use [zed](https://github.com/authzed/zed). It makes RPC calls, stores credentials securely in the OS keychain, and provides quality-of-life features.
 
@@ -65,15 +79,15 @@ Use `--explain` to get a trace:
 zed permission check document:firstdoc writer user:emilia --explain
 ```
 
-# Postgres usage
+## Postgres usage
 
 
 
-# CockroachDB usage
+## CockroachDB usage
 
 
 
-# Docker usage
+## Docker usage
 
 Here are basic commands to use docker with this project. 
 
@@ -90,7 +104,7 @@ colima start
 colima stop
 ```
 
-# Python usage
+## Python usage
 
 Here are basic commands to use python with this project.
 

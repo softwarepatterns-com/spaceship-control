@@ -4,7 +4,7 @@ A demo app using SpiceDB.
 
 ## Why?
 
-Zanzibar’s core promise of global horizontal scalability with strong consistency. It's basically a dynamic programming model where each problem is broken up into smaller problems and cached at each step along the way. Over time, each subset of problems is spread evenly across a distributed cache.
+Zanzibar’s core promise is global horizontal scalability with strong consistency. It's basically dynamic programming where each problem is broken up into smaller problems and cached at each step along the way. Over time, each subset of problems is spread evenly across a distributed cache.
 
 ### Caveats
 
@@ -79,13 +79,54 @@ Use `--explain` to get a trace:
 zed permission check document:firstdoc writer user:emilia --explain
 ```
 
-## Postgres usage
+## SpiceDB Transactions/Commits
+
+Cool and normal.
+
+```
+try:
+  tx = db.transaction()
+
+  # Write relationships during a transaction so that it can be aborted on exception
+  resp = spicedb_client.WriteRelationships(...)
+
+  tx.add(db_models.Document(
+    id=request.document_id,
+    owner=user_id,
+    zedtoken=resp.written_at
+  ))
+  tx.commit()
+except:
+  # Delete relationships written to SpiceDB and re-raise the exception
+  tx.abort()
+  spicedb_client.DeleteRelationships(...)
+  raise
+```
+
+## SpiceDB Streaming (CQRS)
+
+(TODO: Where are the examples?)
+
+## SpiceDB Testing
+
+- All data written is ephemeral: it will be lost when the process is shut down.
+- The API a read-only port: The normal API is served on port 50051 while a new read-only version of the same API is served on port 50052.
+- A unique ephemeral datastore per auth token. If no token, use "default" datastore.
+- There is a [GitHub Action](https://github.com/authzed/action-spicedb) for more convenient integration tests.
 
 
+
+```zsh
+spicedb serve-testing
+# or
+spicedb serve-testing --load-configs myschema.zaml
+```
 
 ## CockroachDB usage
 
+SpiceDB has logic to manage a pool of connections to CockroachDB to [redistribute unbalanced connections](https://authzed.com/blog/maximizing-cockroachdb-performance). They track how many connections exist to each internal node in CockroachDB, and if the numbers are too uneven then they safely and slowly kill some of those connections, hoping that new connections will pick a different internal node -- over time, this works.
 
+They also have expanded logic for error handling. They handle a greater number of use-cases, and they will distribute retries across CockroachDB internal nodes.  They also track the general health of each connection, relying on that mechanism to feel confident about extending the lifetime of a connection beyond the standard 5 minutes. (TODO: [investigate](https://github.com/authzed/crdbpool))
 
 ## Docker usage
 

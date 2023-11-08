@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package spaceship;
+
+service SpaceshipControl {
+  rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse);
+}
+
+message CheckAccessRequest {
+  string resource = 1;
+  string principal = 2;
+  string permission = 3;
+}
+
+message CheckAccessResponse {
+  bool allowed = 1;
+}

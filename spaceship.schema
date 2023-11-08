@@ -1,0 +1,4 @@
+definition spaceship {
+  relation can_access: user
+  permission access = can_access
+}

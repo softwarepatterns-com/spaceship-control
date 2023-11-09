@@ -136,6 +136,12 @@ SpiceDB has logic to manage a pool of connections to CockroachDB to [redistribut
 
 They also have expanded logic for error handling. They handle a greater number of use-cases, and they will distribute retries across CockroachDB internal nodes.  They also track the general health of each connection, relying on that mechanism to feel confident about extending the lifetime of a connection beyond the standard 5 minutes. (TODO: [investigate](https://github.com/authzed/crdbpool))
 
+For the cli tools:
+
+```zsh
+brew install cockroachdb/tap/cockroach
+```
+
 ## Docker usage
 
 Here are basic commands to use docker with this project. 
@@ -145,6 +151,9 @@ If you don't want to use Docker Desktop and you're on OSX, use colima.
 ```zsh
 # Install community-edition of docker cli tools.
 brew install --cask docker
+brew install docker-compose
+mkdir -p ~/.docker/cli-plugins
+ln -sfn /opt/homebrew/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
 # Install the docker daemon.
 brew install colima
 # To start the docker daemon.

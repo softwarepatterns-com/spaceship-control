@@ -1,0 +1,14 @@
+spaceship:Enterprise#captain@user:Janeway
+spaceship_system:Engine#spaceship@spaceship:Enterprise
+spaceship_system:LandingGear#spaceship@spaceship:Enterprise
+spaceship_system:Teleporter#spaceship@spaceship:Enterprise
+spaceship:Enterprise#engineer@user:Tuvok
+spaceship:Enterprise#passenger@user:SevenOfNine
+spaceship_system:Navigation#spaceship@spaceship:Enterprise
+
+assertTrue:
+  - "spaceship_system:Engine#access@user:Janeway"
+  - "spaceship_system:LandingGear#access@user:Tuvok"
+  - "spaceship_system:LandingGear#access@user:SevenOfNine"
+assertFalse:
+  - "spaceship_system:LandingGear#activate@user:SevenOfNine"

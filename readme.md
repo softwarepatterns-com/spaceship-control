@@ -114,13 +114,21 @@ except:
 - A unique ephemeral datastore per auth token. If no token, use "default" datastore.
 - There is a [GitHub Action](https://github.com/authzed/action-spicedb) for more convenient integration tests.
 
-
-
 ```zsh
 spicedb serve-testing
 # or
 spicedb serve-testing --load-configs myschema.zaml
 ```
+
+## SpiceDB Import
+
+Import or seed existing data with (Zed Import)[https://authzed.com/blog/zed-import].  Supports gists, playgrounds, pastebins and even experimental imports from postgres/cockroachdb.
+
+```zsh
+ zed import https://gist.github.com/ecordell/8e3b613a677e3c844742cf24421c08b6
+```
+
+It can even make a best-effort guess on what the schema should be based on a relationships already in your db.
 
 ## CockroachDB usage
 

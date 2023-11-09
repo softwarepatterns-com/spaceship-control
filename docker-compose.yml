@@ -1,0 +1,55 @@
+version: '3.9'
+services:
+  cr_node_1:
+      container_name: cr_node_1
+      image: cockroachdb/cockroach:latest
+      volumes:
+          - ./data/cr_node_1/data:/cockroach/cockroach-data:rw
+          - ./data/cr_node_1/certs:/certs:ro
+      command: start --certs-dir=/certs --advertise-addr=cr_node_1 --join=cr_node_1,cr_node_2,cr_node_3
+      ports:
+          - "26257:26257"
+          - "8080:8080"
+      networks:
+          - network_cockroachdb
+
+  cr_node_2:
+      container_name: cr_node_2
+      image: cockroachdb/cockroach:latest
+      volumes:
+          - ./data/cr_node_2/data:/cockroach/cockroach-data:rw
+          - ./data/cr_node_2/certs:/certs:ro
+      command: start --certs-dir=/certs --advertise-addr=cr_node_2 --join=cr_node_1,cr_node_2,cr_node_3
+      ports:
+          - "26258:26257"
+          - "8081:8080"
+      networks:
+          - network_cockroachdb
+  cr_node_3:
+      container_name: cr_node_3
+      image: cockroachdb/cockroach:latest
+      volumes:
+          - ./data/cr_node_3/data:/cockroach/cockroach-data:rw
+          - ./data/cr_node_3/certs:/certs:ro
+      command: start --certs-dir=/certs --advertise-addr=cr_node_3 --join=cr_node_1,cr_node_2,cr_node_3
+      ports:
+          - "26259:26257"
+          - "8082:8080"
+      networks:
+          - network_cockroachdb
+  crdb-init:
+      container_name: cr_init
+      image: cockroachdb/cockroach:latest
+      volumes:
+        - ./data/cr_node_1/certs:/certs:ro
+      command: init --certs-dir=/certs --host=cr_node_1
+      depends_on:
+        - cr_node_1
+        - cr_node_2
+        - cr_node_3
+      networks:
+        - network_cockroachdb
+
+networks:
+    network_cockroachdb:
+        driver: bridge

@@ -1,0 +1,382 @@
+relationships:
+  - resource: fleet:starfleet
+    relation: admiral
+    subject: user:picard
+  - resource: starship:enterprise
+    relation: captain
+    subject: user:picard
+  - resource: starship:enterprise
+    relation: first_officer
+    subject: user:riker
+  - resource: starship:enterprise
+    relation: chief_engineer
+    subject: user:laforge
+  - resource: starship:enterprise
+    relation: science_officer
+    subject: user:data
+  - resource: starship:enterprise
+    relation: medical_officer
+    subject: user:crusher
+  - resource: starship:enterprise
+    relation: navigator
+    subject: user:crusherw
+  - resource: starship:enterprise
+    relation: tactical_officer
+    subject: user:yar
+  - resource: starship:enterprise
+    relation: communications_officer
+    subject: user:uhura
+  - resource: starship:enterprise
+    relation: helmsman
+    subject: user:sulu
+  - resource: starship:enterprise
+    relation: security_officer
+    subject: user:chekov
+  - resource: starship:voyager
+    relation: captain
+    subject: user:janeway
+  - resource: starship:voyager
+    relation: first_officer
+    subject: user:chakotay
+  - resource: starship:voyager
+    relation: chief_engineer
+    subject: user:torres
+  - resource: starship:voyager
+    relation: science_officer
+    subject: user:sevenofnine
+  - resource: starship:voyager
+    relation: medical_officer
+    subject: user:the_doctor
+  - resource: starship:defiant
+    relation: captain
+    subject: user:sisko
+  - resource: starship:defiant
+    relation: first_officer
+    subject: user:kira
+  - resource: starship:defiant
+    relation: chief_engineer
+    subject: user:obrien
+  - resource: starship:defiant
+    relation: science_officer
+    subject: user:dax
+  - resource: starship:defiant
+    relation: tactical_officer
+    subject: user:worf
+  - resource: starship:defiant
+    relation: medical_officer
+    subject: user:bashir
+  - resource: starship:defiant
+    relation: communications_officer
+    subject: user:odo
+  - resource: starship:defiant
+    relation: helmsman
+    subject: user:nog
+  - resource: starship:defiant
+    relation: security_officer
+    subject: user:tuvok
+  - resource: starship:discovery
+    relation: captain
+    subject: user:lorca
+  - resource: starship:discovery
+    relation: first_officer
+    subject: user:saru
+  - resource: starship:discovery
+    relation: chief_engineer
+    subject: user:stamets
+  - resource: starship:discovery
+    relation: science_officer
+    subject: user:burnham
+  - resource: starship:discovery
+    relation: medical_officer
+    subject: user:coburn
+  - resource: starship:discovery
+    relation: navigator
+    subject: user:detmer
+  - resource: starship:discovery
+    relation: tactical_officer
+    subject: user:reese
+  - resource: starship:discovery
+    relation: communications_officer
+    subject: user:owosekun
+  - resource: starship:discovery
+    relation: security_officer
+    subject: user:bryce
+  - resource: fleet:klingon
+    relation: chancellor
+    subject: user:gorkon
+  - resource: starship:vorcha
+    relation: captain
+    subject: user:chang
+  - resource: starship:vorcha
+    relation: first_officer
+    subject: user:martok
+  - resource: fleet:andorian_fleet
+    relation: admiral
+    subject: user:shran
+  - resource: starship:andorian_cruiser
+    relation: captain
+    subject: user:thoris
+  - resource: starship:andorian_cruiser
+    relation: first_officer
+    subject: user:talas
+  - resource: starship:andorian_cruiser
+    relation: chief_engineer
+    subject: user:shvokh
+  - resource: starship:andorian_cruiser
+    relation: science_officer
+    subject: user:tevak
+  - resource: starship:andorian_cruiser
+    relation: medical_officer
+    subject: user:vyren
+  - resource: starship:andorian_cruiser
+    relation: navigator
+    subject: user:shran_jr
+  - resource: starship:andorian_cruiser
+    relation: tactical_officer
+    subject: user:hravishran
+  - resource: starship:andorian_cruiser
+    relation: communications_officer
+    subject: user:tholos
+  - resource: starship:andorian_cruiser
+    relation: helmsman
+    subject: user:talok
+  - resource: starship:andorian_cruiser
+    relation: security_officer
+    subject: user:huran
+  - resource: fleet:vulcan_fleet
+    relation: admiral
+    subject: user:soval
+  - resource: starship:vulcan_ambassador
+    relation: captain
+    subject: user:vanik
+  - resource: starship:vulcan_ambassador
+    relation: first_officer
+    subject: user:t'pol
+  - resource: starship:vulcan_ambassador
+    relation: chief_engineer
+    subject: user:stel
+  - resource: starship:vulcan_ambassador
+    relation: science_officer
+    subject: user:tpau
+  - resource: starship:vulcan_ambassador
+    relation: medical_officer
+    subject: user:surak
+  - resource: starship:vulcan_ambassador
+    relation: navigator
+    subject: user:valeris
+  - resource: starship:vulcan_ambassador
+    relation: tactical_officer
+    subject: user:skon
+  - resource: starship:vulcan_ambassador
+    relation: communications_officer
+    subject: user:solkar
+  - resource: starship:vulcan_ambassador
+    relation: helmsman
+    subject: user:sarek
+  - resource: starship:vulcan_ambassador
+    relation: security_officer
+    subject: user:syrran
+  - resource: fleet:romulan_fleet
+    relation: admiral
+    subject: user:donatra
+  - resource: starship:romulan_warbird
+    relation: captain
+    subject: user:valdore
+  - resource: starship:romulan_warbird
+    relation: first_officer
+    subject: user:tomalak
+  - resource: starship:romulan_warbird
+    relation: chief_engineer
+    subject: user:sela
+  - resource: starship:romulan_warbird
+    relation: science_officer
+    subject: user:tal
+  - resource: starship:romulan_warbird
+    relation: medical_officer
+    subject: user:jarok
+  - resource: starship:romulan_warbird
+    relation: navigator
+    subject: user:terek
+  - resource: starship:romulan_warbird
+    relation: tactical_officer
+    subject: user:tokath
+  - resource: starship:romulan_warbird
+    relation: communications_officer
+    subject: user:tria
+  - resource: starship:romulan_warbird
+    relation: helmsman
+    subject: user:selan
+  - resource: starship:romulan_warbird
+    relation: security_officer
+    subject: user:toreth
+  - resource: fleet:klingon_fleet
+    relation: admiral
+    subject: user:kang
+  - resource: starship:klingon_bird_of_prey
+    relation: captain
+    subject: user:kor
+  - resource: starship:klingon_bird_of_prey
+    relation: first_officer
+    subject: user:koloth
+  - resource: starship:klingon_bird_of_prey
+    relation: chief_engineer
+    subject: user:krax
+  - resource: starship:klingon_bird_of_prey
+    relation: science_officer
+    subject: user:kurn
+  - resource: starship:klingon_bird_of_prey
+    relation: medical_officer
+    subject: user:antok
+  - resource: starship:klingon_bird_of_prey
+    relation: navigator
+    subject: user:bekk
+  - resource: starship:klingon_bird_of_prey
+    relation: tactical_officer
+    subject: user:duras
+  - resource: starship:klingon_bird_of_prey
+    relation: communications_officer
+    subject: user:gorkon
+  - resource: starship:klingon_bird_of_prey
+    relation: helmsman
+    subject: user:konmel
+  - resource: starship:klingon_bird_of_prey
+    relation: security_officer
+    subject: user:lorgh
+  - resource: fleet:starfleet
+    relation: admiral
+    subject: user:kirk
+  - resource: starship:uss_excelsior
+    relation: captain
+    subject: user:sulu
+  - resource: starship:uss_excelsior
+    relation: first_officer
+    subject: user:rand
+  - resource: starship:uss_excelsior
+    relation: chief_engineer
+    subject: user:scotty
+  - resource: starship:uss_excelsior
+    relation: science_officer
+    subject: user:spock
+  - resource: starship:uss_excelsior
+    relation: medical_officer
+    subject: user:mccoy
+  - resource: starship:uss_excelsior
+    relation: navigator
+    subject: user:chekov
+  - resource: starship:uss_excelsior
+    relation: tactical_officer
+    subject: user:uhura
+  - resource: starship:uss_excelsior
+    relation: communications_officer
+    subject: user:chapel
+  - resource: starship:uss_excelsior
+    relation: helmsman
+    subject: user:joann
+  - resource: starship:uss_excelsior
+    relation: security_officer
+    subject: user:kevin
+  - resource: fleet:cardassian_fleet
+    relation: admiral
+    subject: user:dukat
+  - resource: starship:cardassian_galor
+    relation: captain
+    subject: user:garak
+  - resource: starship:cardassian_galor
+    relation: first_officer
+    subject: user:damar
+  - resource: starship:cardassian_galor
+    relation: chief_engineer
+    subject: user:rusot
+  - resource: starship:cardassian_galor
+    relation: science_officer
+    subject: user:broca
+  - resource: starship:cardassian_galor
+    relation: medical_officer
+    subject: user:ghemor
+  - resource: starship:cardassian_galor
+    relation: navigator
+    subject: user:corat
+  - resource: starship:cardassian_galor
+    relation: tactical_officer
+    subject: user:zek
+  - resource: starship:cardassian_galor
+    relation: communications_officer
+    subject: user:tepic
+  - resource: starship:cardassian_galor
+    relation: helmsman
+    subject: user:morad
+  - resource: starship:cardassian_galor
+    relation: security_officer
+    subject: user:macet
+  - resource: fleet:bajoran_fleet
+    relation: admiral
+    subject: user:kira
+  - resource: starship:bajoran_lightship
+    relation: captain
+    subject: user:shakaar
+  - resource: starship:bajoran_lightship
+    relation: first_officer
+    subject: user:opaka
+  - resource: starship:bajoran_lightship
+    relation: chief_engineer
+    subject: user:ro
+  - resource: starship:bajoran_lightship
+    relation: science_officer
+    subject: user:win
+  - resource: starship:bajoran_lightship
+    relation: medical_officer
+    subject: user:bareil
+  - resource: starship:bajoran_lightship
+    relation: navigator
+    subject: user:li
+  - resource: starship:bajoran_lightship
+    relation: tactical_officer
+    subject: user:lon
+  - resource: starship:bajoran_lightship
+    relation: communications_officer
+    subject: user:ro
+  - resource: starship:bajoran_lightship
+    relation: helmsman
+    subject: user:odo
+  - resource: starship:bajoran_lightship
+    relation: security_officer
+    subject: user:varis
+  - resource: fleet:ferengi_fleet
+    relation: admiral
+    subject: user:quark
+  - resource: starship:ferengi_marauder
+    relation: captain
+    subject: user:rom
+  - resource: starship:ferengi_marauder
+    relation: first_officer
+    subject: user:nog
+  - resource: starship:ferengi_marauder
+    relation: chief_engineer
+    subject: user:leeta
+  - resource: starship:ferengi_marauder
+    relation: science_officer
+    subject: user:ishka
+  - resource: starship:ferengi_marauder
+    relation: medical_officer
+    subject: user:brunt
+  - resource: starship:ferengi_marauder
+    relation: navigator
+    subject: user:zog
+  - resource: starship:ferengi_marauder
+    relation: tactical_officer
+    subject: user:zix
+  - resource: starship:ferengi_marauder
+    relation: communications_officer
+    subject: user:gaila
+  - resource: starship:ferengi_marauder
+    relation: helmsman
+    subject: user:krax
+  - resource: starship:ferengi_marauder
+    relation: security_officer
+    subject: user:grilka
+  - resource: fleet:breen_fleet
+    relation: admiral
+    subject: user:thot
+  - resource: starship:breen_warship
+    relation: captain
+    subject: user:gor

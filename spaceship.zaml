@@ -1,0 +1,111 @@
+schema: >-
+  definition user {}
+
+  definition fleet {
+    relation admiral: user
+  }
+
+  definition starfleet {
+    relation fleet: fleet
+    relation admiral: user
+    relation captain: user
+    relation commander: user
+    relation lieutenant: user
+    relation ensign: user
+    relation chief_engineer: user
+    relation science_officer: user
+    relation medical_officer: user
+    relation helmsman: user
+    relation communications_officer: user
+    relation security_officer: user
+    relation starship: starship
+  }
+
+  definition starship {
+    relation fleet: fleet
+    relation captain: user
+    relation first_officer: user
+    relation chief_engineer: user
+    relation science_officer: user
+    relation medical_officer: user
+    relation navigator: user
+    relation tactical_officer: user
+    relation communications_officer: user
+    relation helmsman: user
+    relation security_officer: user
+  }
+
+  definition starship_system {
+    relation starship: starship
+    permission operate = starship->captain + starship->first_officer
+    permission navigate = starship->navigator + starship->helmsman
+    permission manage_engineering = starship->chief_engineer
+    permission conduct_research = starship->science_officer
+    permission provide_care = starship->medical_officer
+    permission tactical_operations = starship->tactical_officer
+    permission secure_ship = starship->security_officer
+    permission communicate = starship->communications_officer
+  }
+
+  definition klingon_starship_system {
+    relation base_system: starship_system
+    relation klingon: klingon
+    permission command = klingon->chancellor
+    permission engage = klingon->warrior + klingon->chancellor
+  }
+
+  definition vulcan_starship_system {
+    relation base_system: starship_system
+    relation vulcan: vulcan
+    permission diplomatic_authority = vulcan->ambassador
+    permission scientific_endeavor = vulcan->scientist
+  }
+
+  definition andorian_starship_system {
+    relation base_system: starship_system
+    relation andorian: andorian
+    permission military_command = andorian->captain + andorian->commander
+  }
+
+  definition romulan_starship_system {
+    relation base_system: starship_system
+    relation romulan: romulan
+    permission imperial_governance = romulan->praetor
+    permission military_enforcement = romulan->centurion + romulan->praetor
+  }
+
+  definition klingon {
+    relation chancellor: user
+    relation warrior: user
+    relation starship: starship
+  }
+
+  definition vulcan {
+    relation ambassador: user
+    relation scientist: user
+    relation starship: starship
+  }
+
+  definition andorian {
+    relation captain: user
+    relation commander: user
+    relation starship: starship
+  }
+
+  definition romulan {
+    relation praetor: user
+    relation centurion: user
+    relation starship: starship
+  }
+
+  definition starfleet_system {
+    relation starfleet: starfleet
+    permission command = starfleet->admiral + starfleet->captain
+    permission executive_command = starfleet->admiral + starfleet->captain + starfleet->commander
+    permission bridge_operations = starfleet->captain + starfleet->helmsman + starfleet->lieutenant
+    permission engineering_control = starfleet->chief_engineer + starfleet->engineer
+    permission scientific_research = starfleet->science_officer
+    permission medical_operations = starfleet->medical_officer
+    permission security_protocol = starfleet->security_officer
+    permission communications = starfleet->communications_officer
+  }

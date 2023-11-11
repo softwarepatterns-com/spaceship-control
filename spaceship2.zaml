@@ -6,7 +6,6 @@ schema: >-
   }
 
   definition starship_role {
-    relation starship: starship
     relation user: user
   }
 
@@ -18,8 +17,6 @@ schema: >-
   }
 
 relationships: >-
-  starship_role:captain#starship@starship:enterprise
-
   starship_role:captain#user@user:picard
 
   starship_role:starfleet#user@user:picard

@@ -3,22 +3,7 @@ schema: >-
 
   definition fleet {
     relation admiral: user
-  }
-
-  definition starfleet {
-    relation fleet: fleet
-    relation admiral: user
-    relation captain: user
-    relation commander: user
-    relation lieutenant: user
-    relation ensign: user
-    relation chief_engineer: user
-    relation science_officer: user
-    relation medical_officer: user
-    relation helmsman: user
-    relation communications_officer: user
-    relation security_officer: user
-    relation starship: starship
+    relation chancellor: user
   }
 
   definition starship {
@@ -45,6 +30,22 @@ schema: >-
     permission tactical_operations = starship->tactical_officer
     permission secure_ship = starship->security_officer
     permission communicate = starship->communications_officer
+  }
+
+  definition starfleet {
+    relation fleet: fleet
+    relation admiral: user
+    relation captain: user
+    relation commander: user
+    relation lieutenant: user
+    relation ensign: user
+    relation chief_engineer: user
+    relation science_officer: user
+    relation medical_officer: user
+    relation helmsman: user
+    relation communications_officer: user
+    relation security_officer: user
+    relation starship: starship
   }
 
   definition klingon_starship_system {
@@ -109,3 +110,102 @@ schema: >-
     permission security_protocol = starfleet->security_officer
     permission communications = starfleet->communications_officer
   }
+
+relationships: >-
+  fleet:andorian_fleet#admiral@user:shran
+
+  fleet:bajoran_fleet#admiral@user:kira
+
+  fleet:breen_fleet#admiral@user:thot
+
+  fleet:cardassian_fleet#admiral@user:dukat
+
+  fleet:ferengi_fleet#admiral@user:quark
+
+  fleet:klingon_fleet#admiral@user:kang
+
+  fleet:klingon#chancellor@user:gorkon
+
+  fleet:romulan_fleet#admiral@user:donatra
+
+  fleet:starfleet#admiral@user:kirk
+
+  fleet:starfleet#admiral@user:picard
+
+  fleet:vulcan_fleet#admiral@user:soval
+
+  starship:enterprise#captain@user:picard
+  
+  starship:enterprise#chief_engineer@user:laforge
+
+  starship:enterprise#communications_officer@user:uhura
+
+  starship:enterprise#first_officer@user:riker
+
+  starship:enterprise#helmsman@user:sulu
+
+  starship:enterprise#medical_officer@user:crusher
+
+  starship:enterprise#navigator@user:crusherw
+
+  starship:enterprise#science_officer@user:data
+
+  starship:enterprise#security_officer@user:chekov
+
+  starship:enterprise#tactical_officer@user:yar
+
+  starship_system:astrobiology_lab#starship@starship:enterprise
+  
+  starship_system:astrometrics#starship@starship:enterprise
+  
+  starship_system:auxiliary_power_generators#starship@starship:enterprise
+  
+  starship_system:bridge#starship@starship:enterprise
+  
+  starship_system:cargo_hold#starship@starship:enterprise
+  
+  starship_system:cloaking_device#starship@starship:enterprise
+  
+  starship_system:communication_array#starship@starship:enterprise
+  
+  starship_system:computer_core#starship@starship:enterprise
+  
+  starship_system:counseling_office#starship@starship:enterprise
+  
+  starship_system:emergency_medical_hologram#starship@starship:enterprise
+  
+  starship_system:engineering#starship@starship:enterprise
+  
+  starship_system:environmental_control#starship@starship:enterprise
+  
+  starship_system:holodeck#starship@starship:enterprise
+  
+  starship_system:impulse_engines#starship@starship:enterprise
+  
+  starship_system:life_support#starship@starship:enterprise
+  
+  starship_system:navigation#starship@starship:enterprise
+  
+  starship_system:recreation_lounge#starship@starship:enterprise
+  
+  starship_system:recycling_system#starship@starship:enterprise
+  
+  starship_system:replicator_system#starship@starship:enterprise
+  
+  starship_system:science_labs#starship@starship:enterprise
+  
+  starship_system:security#starship@starship:enterprise
+  
+  starship_system:sensor_array#starship@starship:enterprise
+  
+  starship_system:shuttle_bays#starship@starship:enterprise
+  
+  starship_system:sickbay#starship@starship:enterprise
+  
+  starship_system:tactical#starship@starship:enterprise
+  
+  starship_system:temporal_sensors#starship@starship:enterprise
+  
+  starship_system:transporters#starship@starship:enterprise
+  
+  starship_system:warp_drive#starship@starship:enterprise

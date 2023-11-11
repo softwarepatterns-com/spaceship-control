@@ -1,0 +1,56 @@
+schema: >-
+  definition user {}
+
+  definition starship {
+    relation crew_member: user
+  }
+
+  definition starship_role {
+    relation starship: starship
+    relation user: user
+  }
+
+  definition starship_system {
+    relation starship: starship
+    relation role: starship_role#user
+
+    permission operate = starship->crew_member & role
+  }
+
+relationships: >-
+  starship_role:captain#starship@starship:enterprise
+
+  starship_role:captain#user@user:picard
+
+  starship_role:starfleet#user@user:picard
+
+  starship_role:captain#user@user:kirk
+
+  starship_role:starfleet#user@user:kirk
+
+  starship_role:starfleet#user@user:wesley
+
+  starship:enterprise#crew_member@user:picard
+  
+  starship:enterprise#crew_member@user:wesley
+
+  starship_system:enterprise_bridge#starship@starship:enterprise
+
+  starship_system:enterprise_bridge#role@starship_role:captain#user
+
+  starship_system:sickbay#starship@starship:enterprise
+
+  starship_system:sickbay#role@starship_role:starfleet#user
+
+assertions:
+  assertTrue:
+    - "starship_role:captain#user@user:picard"
+    - "starship_system:enterprise_bridge#operate@user:picard"
+    - "starship_system:sickbay#operate@user:picard"
+    - "starship:enterprise#crew_member@user:wesley"
+    - "starship_system:sickbay#operate@user:wesley"
+
+  assertFalse:
+    - "starship_system:enterprise_bridge#operate@user:kirk"
+    - "starship_system:sickbay#operate@user:kirk"
+    - "starship_system:enterprise_bridge#operate@user:wesley"

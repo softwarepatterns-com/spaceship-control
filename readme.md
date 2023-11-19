@@ -8,9 +8,10 @@ Zanzibar’s core promise is global horizontal scalability with strong consisten
 
 ### Caveats
 
-Caveats are statically merged in the sub-problem cache, returning CAVEATED instead of ALLOW or DENY. A CAVEATED result is unioned together with other results, returning a static expression that is then evaluated against user-provided values to determine permission as a final step. 
+Caveats are statically merged in the sub-problem cache, returning CAVEATED instead of ALLOW or DENY. A CAVEATED result is unioned together with other results, returning a static expression that is then evaluated against user-provided values to determine permission as a final step.
 
 [Ideal use cases](https://github.com/authzed/spicedb/issues/386):
+
 - Time: “I want to bound the amount of time that a user has this role”
 - Time: “The cleaning staff should only be allowed to access the office between 5pm and 10pm on weekdays”
 - IP Address: “You can only access this site if you’re not in N.K.”
@@ -18,26 +19,25 @@ Caveats are statically merged in the sub-problem cache, returning CAVEATED inste
 
 ## To run
 
-
-
 ## To develop
 
 ## SpiceDB usage
 
-Here are basic commands to use SpiceDB with this project. 
+Here are basic commands to use SpiceDB with this project.
 
 To install locally and get the cli.
+
 ```zsh
 brew install authzed/tap/spicedb
 ```
 
 To run in a docker container
+
 ```zsh
 docker run -p 50051:50051 quay.io/authzed/spicedb:latest serve
 ```
 
 If using kubernetes, use the [SpiceDB Operator](https://github.com/authzed/spicedb-operator).
-
 
 ### SpiceDB cli usage
 
@@ -70,11 +70,13 @@ zed permission check user:sam pilot ship:ornithopter # true
 ```
 
 To test the schema:
+
 ```zsh
 zed validate
 ```
 
 Use `--explain` to get a trace:
+
 ```zsh
 zed permission check document:firstdoc writer user:emilia --explain
 ```
@@ -122,7 +124,7 @@ spicedb serve-testing --load-configs myschema.zaml
 
 ## SpiceDB Import
 
-Import or seed existing data with (Zed Import)[https://authzed.com/blog/zed-import].  Supports gists, playgrounds, pastebins and even experimental imports from postgres/cockroachdb.
+Import or seed existing data with (Zed Import)[https://authzed.com/blog/zed-import]. Supports gists, playgrounds, pastebins and even experimental imports from postgres/cockroachdb.
 
 ```zsh
  zed import https://gist.github.com/ecordell/8e3b613a677e3c844742cf24421c08b6
@@ -134,7 +136,7 @@ It can even make a best-effort guess on what the schema should be based on a rel
 
 SpiceDB has logic to manage a pool of connections to CockroachDB to [redistribute unbalanced connections](https://authzed.com/blog/maximizing-cockroachdb-performance). They track how many connections exist to each internal node in CockroachDB, and if the numbers are too uneven then they safely and slowly kill some of those connections, hoping that new connections will pick a different internal node -- over time, this works.
 
-They also have expanded logic for error handling. They handle a greater number of use-cases, and they will distribute retries across CockroachDB internal nodes.  They also track the general health of each connection, relying on that mechanism to feel confident about extending the lifetime of a connection beyond the standard 5 minutes. (TODO: [investigate](https://github.com/authzed/crdbpool))
+They also have expanded logic for error handling. They handle a greater number of use-cases, and they will distribute retries across CockroachDB internal nodes. They also track the general health of each connection, relying on that mechanism to feel confident about extending the lifetime of a connection beyond the standard 5 minutes. (TODO: [investigate](https://github.com/authzed/crdbpool))
 
 For the cli tools:
 
@@ -144,7 +146,7 @@ brew install cockroachdb/tap/cockroach
 
 ## Docker usage
 
-Here are basic commands to use docker with this project. 
+Here are basic commands to use docker with this project.
 
 If you don't want to use Docker Desktop and you're on OSX, use colima.
 
@@ -160,31 +162,4 @@ brew install colima
 colima start
 # To stop the docker daemon.
 colima stop
-```
-
-## Python usage
-
-Here are basic commands to use python with this project.
-
-To create a python env
-
-```zsh
-python3 -m venv env
-```
-
-To start a python env
-
-```zsh
-source env/bin/activate
-pip install -r requirements.txt 
-```
-
-To save the current dependencies using [pip freeze](https://pip.pypa.io/en/stable/cli/pip_freeze/)
-```zsh
-pip freeze > requirements.txt
-```
-
-To stop the env
-```zsh
-deactivate
 ```

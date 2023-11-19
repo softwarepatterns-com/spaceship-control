@@ -1,0 +1,9 @@
+{
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.defaultInterpreterPath": "${workspaceFolder}/python/venv",
+  "python.envFile": "${workspaceFolder}/python/.env",
+  "python.analysis.logLevel": "Trace",
+  "python.languageServer": "Pylance"
+}

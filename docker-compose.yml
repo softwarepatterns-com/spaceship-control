@@ -37,16 +37,41 @@ services:
           - "8082:8080"
       networks:
           - network_cockroachdb
-  crdb-init:
-      container_name: cr_init
+  cr_init:
+      container_name: init_cr
       image: cockroachdb/cockroach:latest
       volumes:
         - ./data/cr_node_1/certs:/certs:ro
-      command: init --certs-dir=/certs --host=cr_node_1
+        - ./scripts:/scripts
+      entrypoint: /scripts/init_cr.sh
       depends_on:
         - cr_node_1
         - cr_node_2
         - cr_node_3
+      networks:
+        - network_cockroachdb
+  spicedb_migrate:
+      container_name: spicedb_migrate
+      image: authzed/spicedb:latest
+      volumes:
+        - ./data/cr_node_1/certs:/certs:ro
+      command: migrate head --datastore-engine=cockroachdb --datastore-conn-uri="postgres://root:secret@cr_node_1:26257/spicedb?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key"
+      depends_on:
+        cr_init:
+          condition: service_completed_successfully
+      networks:
+        - network_cockroachdb
+  spicedb:
+      container_name: spicedb
+      image: authzed/spicedb:latest
+      volumes:
+        - ./data/cr_node_1/certs:/certs:ro
+      command: serve --grpc-preshared-key "my_laptop_dev" --datastore-engine=cockroachdb --datastore-conn-uri="postgres://root:secret@cr_node_1:26257/spicedb?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key"
+      depends_on:
+        spicedb_migrate:
+          condition: service_completed_successfully
+      ports:
+        - "50051:50051"
       networks:
         - network_cockroachdb
 

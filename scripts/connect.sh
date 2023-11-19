@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Connect to the spicedb database on cockroachdb
 #

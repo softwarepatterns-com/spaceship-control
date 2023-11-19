@@ -1,0 +1,16 @@
+definition user {}
+
+definition starship {
+  relation crew_member: user
+}
+
+definition starship_role {
+  relation user: user
+}
+
+definition starship_system {
+  relation starship: starship
+  relation role: starship_role#user
+
+  permission operate = starship->crew_member & role
+}

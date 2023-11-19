@@ -6,7 +6,9 @@
       "type": "python",
       "request": "launch",
       "program": "${file}",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/python",
+      "purpose": ["debug-test", "debug-in-terminal"]
     }
   ]
 }

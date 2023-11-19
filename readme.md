@@ -6,18 +6,30 @@ A demo app using SpiceDB.
 
 Zanzibar’s core promise is global horizontal scalability with strong consistency. It's basically dynamic programming where each problem is broken up into smaller problems and cached at each step along the way. Over time, each subset of problems is spread evenly across a distributed cache.
 
-### Caveats
+## To Run Demo
 
-Caveats are statically merged in the sub-problem cache, returning CAVEATED instead of ALLOW or DENY. A CAVEATED result is unioned together with other results, returning a static expression that is then evaluated against user-provided values to determine permission as a final step.
+```bash
+colima start
+./scripts/make_certs.sh
+docker-compose up
+```
 
-[Ideal use cases](https://github.com/authzed/spicedb/issues/386):
+To run in-memory
 
-- Time: “I want to bound the amount of time that a user has this role”
-- Time: “The cleaning staff should only be allowed to access the office between 5pm and 10pm on weekdays”
-- IP Address: “You can only access this site if you’re not in N.K.”
-- Money: “This user is an approver if the order value is < $50”
+```zsh
+docker run --rm -p 50051:50051 quay.io/authzed/spicedb:latest serve --grpc-preshared-key "my_laptop_dev"
+```
 
-## To run
+To run against cockroach
+
+```zsh
+docker run --rm -p 50051:50051 quay.io/authzed/spicedb:latest serve --grpc-preshared-key "my_laptop_dev" --datastore-engine=cockroachdb --datastore-conn-uri="postgres://root:secret@localhost:8080/spicedb?sslmode=disable"
+```
+
+```zsh
+zed context set dev localhost:50051 my_laptop_dev
+zed schema write star-trek.zed --insecure
+```
 
 ## To develop
 
@@ -34,7 +46,7 @@ brew install authzed/tap/spicedb
 To run in a docker container
 
 ```zsh
-docker run -p 50051:50051 quay.io/authzed/spicedb:latest serve
+docker run --rm -p 50051:50051 quay.io/authzed/spicedb:latest serve --grpc-preshared-key "my_laptop_dev"
 ```
 
 If using kubernetes, use the [SpiceDB Operator](https://github.com/authzed/spicedb-operator).
@@ -50,16 +62,16 @@ brew install authzed/tap/zed
 Save credentials to the local OS keychain. Example:
 
 ```zsh
-zed context set prod grpc.authzed.com:443 tc_zed_my_laptop_deadbeefdeadbeefdeadbeefdeadbeef
-zed context set dev localhost:80 testpresharedkey
+zed context set prod grpc.authzed.com:443 my_laptop_prod
+zed context set dev localhost:80 my_laptop_dev
 zed context list
 ```
 
 They can also be provide per command, or from env vars. Example:
 
 ```zsh
-zed schema read --endpoint grpc.authzed.com:443 --token tc_zed_my_laptop_deadbeefdeadbeef
-ZED_ENDPOINT=grpc.authzed.com:443 ZED_TOKEN=tc_zed_my_laptop_deadbeefdeadbeef zed schema read
+zed schema read --endpoint grpc.authzed.com:443 --token my_laptop_dev
+ZED_ENDPOINT=grpc.authzed.com:443 ZED_TOKEN=my_laptop_dev zed schema read
 ```
 
 ```zsh
@@ -156,10 +168,18 @@ brew install --cask docker
 brew install docker-compose
 mkdir -p ~/.docker/cli-plugins
 ln -sfn /opt/homebrew/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+
 # Install the docker daemon.
 brew install colima
+
 # To start the docker daemon.
 colima start
+
 # To stop the docker daemon.
 colima stop
+
+# If something goes horribly wrong (due to M1-M3 macs)
+colima delete
+rm -rf ~/.lima
+colima start
 ```

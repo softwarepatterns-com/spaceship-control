@@ -1,5 +1,18 @@
 # Spaceship Control: Python
 
+## How to Generate Protobufs from Buf Registry
+
+Buf usage
+
+[docs](https://buf.build/docs/ecosystem/cli-overview)
+
+generate --
+
+### Debugging protobufs
+
+curl -- Use to make gRPC calls.
+convert -- Convert from binary to text and back.
+
 ## Python usage
 
 Here are basic commands to use python with this project.

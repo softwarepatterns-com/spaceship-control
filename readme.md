@@ -175,6 +175,12 @@ brew install colima
 # To start the docker daemon.
 colima start
 
+# To start the docker daemon with custom settings
+colima start --edit
+
+# To edit the default settings
+vi ~/.colima/default/config.conf
+
 # To stop the docker daemon.
 colima stop
 

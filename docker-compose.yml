@@ -2,7 +2,7 @@ version: '3.9'
 services:
   cr_node_1:
       container_name: cr_node_1
-      image: cockroachdb/cockroach:latest
+      image: ${COCKROACH_IMAGE}
       volumes:
           - ./data/cr_node_1/data:/cockroach/cockroach-data:rw
           - ./data/cr_node_1/certs:/certs:ro
@@ -10,12 +10,17 @@ services:
       ports:
           - "26257:26257"
           - "8080:8080"
+      healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+          interval: 30s
+          timeout: 10s
+          retries: 3
       networks:
           - network_cockroachdb
 
   cr_node_2:
       container_name: cr_node_2
-      image: cockroachdb/cockroach:latest
+      image: ${COCKROACH_IMAGE}
       volumes:
           - ./data/cr_node_2/data:/cockroach/cockroach-data:rw
           - ./data/cr_node_2/certs:/certs:ro
@@ -25,9 +30,10 @@ services:
           - "8081:8080"
       networks:
           - network_cockroachdb
+  
   cr_node_3:
       container_name: cr_node_3
-      image: cockroachdb/cockroach:latest
+      image: ${COCKROACH_IMAGE}
       volumes:
           - ./data/cr_node_3/data:/cockroach/cockroach-data:rw
           - ./data/cr_node_3/certs:/certs:ro
@@ -37,37 +43,60 @@ services:
           - "8082:8080"
       networks:
           - network_cockroachdb
+  
   cr_init:
       container_name: init_cr
-      image: cockroachdb/cockroach:latest
+      image: ${COCKROACH_IMAGE}
       volumes:
         - ./data/cr_node_1/certs:/certs:ro
         - ./scripts:/scripts
-      entrypoint: /scripts/init_cr.sh
+      environment:
+        - COCKROACH_DATABASE=${COCKROACH_DATABASE}
+        - COCKROACH_USER=${COCKROACH_USER}
+        - COCKROACH_PASSWORD=${COCKROACH_PASSWORD}
+      entrypoint: /scripts/wait-for.sh 5 /scripts/init_cr.sh
       depends_on:
-        - cr_node_1
-        - cr_node_2
-        - cr_node_3
+        cr_node_1:
+          condition: service_started
+        cr_node_2:
+          condition: service_started
+        cr_node_3:
+          condition: service_started
       networks:
         - network_cockroachdb
+  
   spicedb_migrate:
       container_name: spicedb_migrate
-      image: authzed/spicedb:latest
+      image: ${SPICEDB_IMAGE}
       volumes:
         - ./data/cr_node_1/certs:/certs:ro
-      command: migrate head --datastore-engine=cockroachdb --datastore-conn-uri="postgres://root:secret@cr_node_1:26257/spicedb?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key"
+      command: >
+        migrate head 
+        --datastore-engine=cockroachdb 
+        --datastore-conn-uri="postgres://${COCKROACH_USER}:${COCKROACH_PASSWORD}@cr_node_1:26257/${COCKROACH_DATABASE}?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key"
       depends_on:
+        # When the first node believes it is ready.
+        cr_node_1:
+          condition: service_healthy
+        # When the first node has been initialized and has the correct database permissions.
         cr_init:
           condition: service_completed_successfully
       networks:
         - network_cockroachdb
+  
   spicedb:
       container_name: spicedb
-      image: authzed/spicedb:latest
+      image: ${SPICEDB_IMAGE}
       volumes:
         - ./data/cr_node_1/certs:/certs:ro
-      command: serve --grpc-preshared-key "my_laptop_dev" --datastore-engine=cockroachdb --datastore-conn-uri="postgres://root:secret@cr_node_1:26257/spicedb?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key"
+      command: >
+        serve
+        --grpc-preshared-key "${SPICEDB_GRPC_KEY}" 
+        --datastore-engine=cockroachdb 
+        --datastore-conn-uri="postgres://${COCKROACH_USER}:${COCKROACH_PASSWORD}@cr_node_1:26257/${COCKROACH_DATABASE}?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key" 
+        --telemetry-endpoint=""
       depends_on:
+        # When a migration has been run or is already ready.
         spicedb_migrate:
           condition: service_completed_successfully
       ports:

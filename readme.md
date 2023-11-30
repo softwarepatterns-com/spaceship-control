@@ -134,6 +134,14 @@ spicedb serve-testing
 spicedb serve-testing --load-configs myschema.zaml
 ```
 
+## SpiceDB Openssl setup
+
+You can test the situation with spicedb grpc cert usage using a command like this:
+
+```
+openssl s_client -connect localhost:50051 -CAfile data/certs/ca.crt
+```
+
 ## SpiceDB Import
 
 Import or seed existing data with (Zed Import)[https://authzed.com/blog/zed-import]. Supports gists, playgrounds, pastebins and even experimental imports from postgres/cockroachdb.

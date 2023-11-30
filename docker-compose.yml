@@ -88,10 +88,12 @@ services:
       container_name: spicedb
       image: ${SPICEDB_IMAGE}
       volumes:
-        - ./data/cr_node_1/certs:/certs:ro
+        - ./data/spicedb/certs:/certs:ro
       command: >
         serve
         --grpc-preshared-key "${SPICEDB_GRPC_KEY}" 
+        --grpc-tls-cert-path /certs/spicedb.crt
+        --grpc-tls-key-path /certs/spicedb.key
         --datastore-engine=cockroachdb 
         --datastore-conn-uri="postgres://${COCKROACH_USER}:${COCKROACH_PASSWORD}@cr_node_1:26257/${COCKROACH_DATABASE}?sslmode=require&sslrootcert=/certs/ca.crt&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key" 
         --telemetry-endpoint=""

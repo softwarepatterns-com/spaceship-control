@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpiceDB Test Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>SpiceDB Test Interface</h1>
+
+    <!-- Section for Checking Permissions -->
+    <section>
+      <h2>Check Permission</h2>
+
+      <form id="checkPermissionForm">
+        <div>
+          Example:
+          <a
+            href="#"
+            class="example-data"
+            data-values='{"q":"starship_system:enterprise_bridge#operate@user:picard"}'
+            >starship_system:enterprise_bridge#operate@user:picard</a
+          >
+        </div>
+        <input type="text" id="q" placeholder="Enter query" />
+        <button type="button" id="checkButton">Check</button>
+      </form>
+      <p id="checkResult"></p>
+    </section>
+
+    <!-- Section for Listing Relationships -->
+    <section>
+      <h2>List Relationships</h2>
+      <form id="listRelationshipsForm">
+        <button type="button" id="listRelationshipsButton">
+          List Relationships
+        </button>
+      </form>
+      <ul id="relationshipsList"></ul>
+    </section>
+
+    <!-- Section for Lookup Subjects -->
+    <section>
+      <h2>Lookup Subjects</h2>
+
+      <form id="lookupSubjectsForm">
+        <div>
+          Example:
+          <a
+            href="#"
+            class="example-data"
+            data-values='{"subjectObjectType":"user","permission":"operate","resource":"starship_system:enterprise_bridge"}'
+            >user, operate, starship_system:enterprise_bridge</a
+          >
+        </div>
+        <input
+          type="text"
+          id="subjectObjectType"
+          placeholder="Subject Object Type"
+        />
+        <input type="text" id="permission" placeholder="Permission" />
+        <input type="text" id="resource" placeholder="Resource" />
+        <button type="button" id="lookupSubjectsButton">Lookup Subjects</button>
+      </form>
+      <pre id="lookupSubjectsResult"></pre>
+    </section>
+
+    <!-- Section for Lookup Resources -->
+    <section>
+      <h2>Lookup Resources</h2>
+
+      <form id="lookupResourcesForm">
+        <div>
+          Example:
+          <a
+            href="#"
+            class="example-data"
+            data-values='{"resourceObjectType":"starship_system","permission":"operate","subject":"user:picard"}'
+            >starship_system, operate, user:picard</a
+          >
+        </div>
+        <input
+          type="text"
+          id="resourceObjectType"
+          placeholder="Resource Object Type"
+        />
+        <input type="text" id="permission" placeholder="Permission" />
+        <input type="text" id="subject" placeholder="Subject" />
+        <button type="button" id="lookupResourcesButton">
+          Lookup Resources
+        </button>
+      </form>
+      <pre id="lookupResourcesResult"></pre>
+    </section>
+
+    <!-- Section for Expand Permission Tree -->
+    <section>
+      <h2>Expand Permission Tree</h2>
+
+      <form id="expandPermissionTreeForm">
+        <div>
+          Example:
+          <a
+            href="#"
+            class="example-data"
+            data-values='{"resource":"starship_system:enterprise_bridge","permission":"operate"}'
+            >starship_system:enterprise_bridge, operate</a
+          >
+        </div>
+        <input type="text" id="resource" placeholder="Resource" />
+        <input type="text" id="permission" placeholder="Permission" />
+        <button type="button" id="expandPermissionTreeButton">
+          Expand Tree
+        </button>
+      </form>
+      <pre id="expandPermissionTreeResult"></pre>
+    </section>
+
+    <script>
+      // Generic function to send GET requests and update the result
+      function sendGetRequest(endpoint, params, resultElementId) {
+        const queryString = Object.entries(params)
+          .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+          .join("&");
+
+        axios
+          .get(`/${endpoint}?${queryString}`)
+          .then((response) => {
+            document.getElementById(resultElementId).innerText = JSON.stringify(
+              response.data,
+              null,
+              2
+            );
+          })
+          .catch((error) => {
+            document.getElementById(
+              resultElementId
+            ).innerText = `Error: ${error}`;
+          });
+      }
+
+      // Function to handle button click for specific endpoints
+      function handleButtonClick(buttonId, endpoint, resultElementId) {
+        const button = document.getElementById(buttonId);
+        button.addEventListener("click", () => {
+          const params = Array.from(button.form.elements)
+            .filter((el) => el.tagName === "INPUT" && el.type === "text")
+            .reduce((acc, el) => {
+              acc[el.id] = el.value;
+              return acc;
+            }, {});
+
+          sendGetRequest(endpoint, params, resultElementId);
+        });
+      }
+
+      // Attach event handlers to buttons
+      handleButtonClick("checkButton", "check", "checkResult");
+      handleButtonClick(
+        "listRelationshipsButton",
+        "relationships",
+        "relationshipsList"
+      );
+      handleButtonClick(
+        "lookupSubjectsButton",
+        "lookup-subjects",
+        "lookupSubjectsResult"
+      );
+      handleButtonClick(
+        "lookupResourcesButton",
+        "lookup-resources",
+        "lookupResourcesResult"
+      );
+      handleButtonClick(
+        "expandPermissionTreeButton",
+        "expand-permission-tree",
+        "expandPermissionTreeResult"
+      );
+
+      // Function to fill input fields with provided data
+      function fillFields(form, data) {
+        Object.entries(data).forEach(([id, value]) => {
+          form.querySelector(`#${id}`).value = value;
+        });
+      }
+
+      function getParentForm(el) {
+        let form;
+        while (form === undefined) {
+          form = el.parentElement;
+          if (form.tagName !== "FORM") {
+            form = form.parentElement;
+          }
+        }
+        return form;
+      }
+
+      // Event listeners for example data
+      document.querySelectorAll(".example-data").forEach((el) => {
+        el.addEventListener("click", function () {
+          let form = getParentForm(this);
+          const data = JSON.parse(this.getAttribute("data-values"));
+          fillFields(form, data);
+        });
+      });
+    </script>
+  </body>
+</html>

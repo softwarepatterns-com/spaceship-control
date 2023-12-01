@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { toDot } from "./lib/dot.mjs";
+import { displayDotFile } from "./lib/iterm2.mjs";
 import {
   createObject,
   createSubject,
@@ -12,7 +13,6 @@ import {
   createPermissionRequestStr,
   simplifyPermissionRelationshipTree,
 } from "./lib/authzed.mjs";
-import fastify from "fastify";
 
 const getFileContents = (filePath) => {
   const __filename = fileURLToPath(import.meta.url);
@@ -24,102 +24,7 @@ const getFileContents = (filePath) => {
 const token = "my_laptop_dev";
 const endpoint = "localhost:50051";
 const cert = getFileContents("../../data/certs/ca.crt");
-const testHtml = getFileContents("./test.html");
 const client1 = v1.NewClientWithCustomCert(token, endpoint, cert);
-const app = fastify({ logger: true });
-
-app.get("/", async (request, reply) => {
-  reply.type("text/html").send(testHtml);
-});
-
-app.get("/relationships", async (request, reply) => {
-  const bulkExportRelationships = await client1
-    .bulkExportRelationships({
-      optionalLimit: 100,
-    })
-    .toArray();
-
-  return bulkExportRelationships.reduce((list, result) => {
-    list = list.concat(result.relationships.map(createRelationshipStr));
-    return list;
-  }, []);
-});
-
-app.get("/check", async (request, reply) => {
-  const { q } = request.query;
-
-  const checkPermissionResponse = await client1.promises.checkPermission(
-    createCheckPermissionRequest(q)
-  );
-  return v1.CheckPermissionResponse_Permissionship[
-    checkPermissionResponse.permissionship
-  ];
-});
-
-/**
- * @example
- * curl "http://localhost:3000/lookup-subjects?subjectObjectType=user&permission=operate&resource=starship_system:enterprise_bridge"
- */
-app.get("/lookup-subjects", async (request, reply) => {
-  const { subjectObjectType, permission, resource } = request.query;
-  try {
-    const subjects = await lookupSubjects(
-      subjectObjectType,
-      permission,
-      resource
-    );
-    return subjects;
-  } catch (err) {
-    reply.status(500).send(err.message);
-  }
-});
-
-/**
- * @example
- * curl "http://localhost:3000/lookup-resources?resourceObjectType=starship_system&permission=operate&subject=user:picard"
- */
-app.get("/lookup-resources", async (request, reply) => {
-  const { resourceObjectType, permission, subject } = request.query;
-  try {
-    const resources = await lookupResources(
-      resourceObjectType,
-      permission,
-      subject
-    );
-    return resources;
-  } catch (err) {
-    reply.status(500).send(err.message);
-  }
-});
-
-/**
- * @example
- * curl "http://localhost:3000/expand-permission-tree?resource=starship_system:enterprise_bridge&permission=operate"
- */
-app.get("/expand-permission-tree", async (request, reply) => {
-  const { resource, permission } = request.query;
-  try {
-    const permissionTree = await expandPermissionTree(resource, permission);
-    return permissionTree;
-  } catch (err) {
-    reply.status(500).send(err.message);
-  }
-});
-
-app.get("/health", async (request, reply) => {
-  return "OK";
-});
-
-const start = async () => {
-  try {
-    await app.listen({ port: 3000 });
-    app.log.info(`server listening on ${app.server.address().port}`);
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
-};
-start();
 
 const readResourceRelationships = async (resourceType) => {
   return (
@@ -270,7 +175,98 @@ console.log(
 console.log("user relationships:", await readResourceRelationships("user"));
 console.log("");
 
+// All true
+
+console.log(
+  "Is Picard a captain?",
+  await checkPermission("starship_role:captain#user@user:picard")
+);
+
+console.log(
+  "Can Picard operate the Enterprise Bridge?",
+  await checkPermission("starship_system:enterprise_bridge#operate@user:picard")
+);
+
+console.log(
+  "Can Picard operate the Enterprise Sickbay?",
+  await checkPermission("starship_system:sickbay#operate@user:picard")
+);
+
+console.log(
+  "Is Wesley a member of the crew?",
+  await checkPermission("starship:enterprise#crew_member@user:wesley")
+);
+
+console.log(
+  "Can Wesley operate the Enterprise Sickbay?",
+  await checkPermission("starship_system:sickbay#operate@user:wesley")
+);
+
+console.log(
+  "Can Wesley operate the Enterprise Sickbay?",
+  await checkPermission("starship_system:sickbay#operate@user:wesley")
+);
+
+// All false
+
+console.log(
+  "Can Kirk operate the Enterprise Bridge?",
+  await checkPermission("starship_system:enterprise_bridge#operate@user:kirk")
+);
+
+console.log(
+  "Can Kirk operate the Enterprise Sickbay?",
+  await checkPermission("starship_system:sickbay#operate@user:kirk")
+);
+
+console.log(
+  "Can Wesley operate the Enterprise Bridge?",
+  await checkPermission("starship_system:enterprise_bridge#operate@user:wesley")
+);
+
+// Bulk check
+
+console.log(
+  "Check all these permissions:",
+  await bulkCheckPermission([
+    "starship_role:captain#user@user:picard",
+    "starship_system:enterprise_bridge#operate@user:picard",
+    "starship_system:sickbay#operate@user:picard",
+    "starship:enterprise#crew_member@user:wesley",
+    "starship_system:sickbay#operate@user:wesley",
+    "starship_system:sickbay#operate@user:wesley",
+    "starship_system:enterprise_bridge#operate@user:kirk",
+    "starship_system:sickbay#operate@user:kirk",
+    "starship_system:enterprise_bridge#operate@user:wesley",
+  ])
+);
+
 console.log("Export all relationships:", await bulkExportRelationships());
+
+console.log(
+  "Which users can operate the Enterprise Bridge?",
+  await lookupSubjects("user", "operate", "starship_system:enterprise_bridge")
+);
+
+console.log(
+  "Which users can operate the Sickbay?",
+  await lookupSubjects("user", "operate", "starship_system:sickbay")
+);
+
+console.log(
+  "Which starship systems can Picard operate?",
+  await lookupResources("starship_system", "operate", "user:picard")
+);
+
+console.log(
+  "Which starship systems can Wesley operate?",
+  await lookupResources("starship_system", "operate", "user:wesley")
+);
+
+console.log(
+  "Which starship systems can Kirk operate?",
+  await lookupResources("starship_system", "operate", "user:kirk")
+);
 
 const expandPermissionTree = async (resource, permission) => {
   const expandPermissionTreeResponse =
@@ -316,4 +312,29 @@ console.log(
     { pretty: true, indent: 1 }
   ),
   "\n"
+);
+
+displayDotFile(
+  toDot(
+    [
+      await expandPermissionTree(
+        "starship_system:enterprise_bridge",
+        "operate"
+      ),
+    ],
+    { pretty: false }
+  )
+);
+
+displayDotFile(
+  toDot(
+    [
+      await expandPermissionTree(
+        "starship_system:enterprise_bridge",
+        "operate"
+      ),
+      await expandPermissionTree("starship_system:sickbay", "operate"),
+    ],
+    { pretty: false }
+  )
 );

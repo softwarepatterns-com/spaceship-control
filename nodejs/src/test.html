@@ -40,6 +40,50 @@
       <ul id="relationshipsList"></ul>
     </section>
 
+    <!-- Section for Starship Relationships -->
+    <section>
+      <h2>Starship Relationships</h2>
+      <form id="listStarshipRelationshipsForm">
+        <button type="button" id="starshipRelationshipsButton">
+          List Starship Relationships
+        </button>
+      </form>
+      <ul id="starshipRelationshipsList"></ul>
+    </section>
+
+    <!-- Section for Starship Role Relationships -->
+    <section>
+      <h2>Starship Role Relationships</h2>
+      <form id="listStarshipRoleRelationshipsForm">
+        <button type="button" id="starshipRoleRelationshipsButton">
+          List Starship Role Relationships
+        </button>
+      </form>
+      <ul id="starshipRoleRelationshipsList"></ul>
+    </section>
+
+    <!-- Section for Starship System Relationships -->
+    <section>
+      <h2>Starship System Relationships</h2>
+      <form id="listStarshipSystemRelationshipsForm">
+        <button type="button" id="starshipSystemRelationshipsButton">
+          List Starship System Relationships
+        </button>
+      </form>
+      <ul id="starshipSystemRelationshipsList"></ul>
+    </section>
+
+    <!-- Section for User Relationships -->
+    <section>
+      <h2>User Relationships</h2>
+      <form id="listUserRelationshipsForm">
+        <button type="button" id="userRelationshipsButton">
+          List User Relationships
+        </button>
+      </form>
+      <ul id="userRelationshipsList"></ul>
+    </section>
+
     <!-- Section for Lookup Subjects -->
     <section>
       <h2>Lookup Subjects</h2>
@@ -117,41 +161,80 @@
       <pre id="expandPermissionTreeResult"></pre>
     </section>
 
+    <section>
+      <h2>Expand Permission Tree (SVG/PNG)</h2>
+
+      <form id="expandPermissionTreeImageForm">
+        <div>
+          Example:
+          <a
+            href="#"
+            class="example-data"
+            data-values='{"resource":"starship_system:enterprise_bridge","permission":"operate"}'
+            >starship_system:enterprise_bridge, operate</a
+          >
+        </div>
+        <input type="text" id="resource" placeholder="Resource" />
+        <input type="text" id="permission" placeholder="Permission" />
+        <select id="format">
+          <option value="svg">SVG</option>
+          <option value="png">PNG</option>
+        </select>
+        <button type="button" id="expandPermissionTreeImageButton">
+          Expand Tree
+        </button>
+      </form>
+      <div id="expandPermissionTreeImageResult"></div>
+    </section>
+
     <script>
       // Generic function to send GET requests and update the result
-      function sendGetRequest(endpoint, params, resultElementId) {
-        const queryString = Object.entries(params)
-          .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-          .join("&");
-
-        axios
-          .get(`/${endpoint}?${queryString}`)
-          .then((response) => {
-            document.getElementById(resultElementId).innerText = JSON.stringify(
-              response.data,
-              null,
-              2
-            );
-          })
-          .catch((error) => {
-            document.getElementById(
-              resultElementId
-            ).innerText = `Error: ${error}`;
-          });
-      }
-
-      // Function to handle button click for specific endpoints
       function handleButtonClick(buttonId, endpoint, resultElementId) {
         const button = document.getElementById(buttonId);
-        button.addEventListener("click", () => {
+        button.addEventListener("click", (e) => {
+          e.stopPropagation();
+          e.preventDefault();
           const params = Array.from(button.form.elements)
-            .filter((el) => el.tagName === "INPUT" && el.type === "text")
+            .filter((el) => el.tagName === "INPUT" || el.tagName === "SELECT")
             .reduce((acc, el) => {
               acc[el.id] = el.value;
               return acc;
             }, {});
 
-          sendGetRequest(endpoint, params, resultElementId);
+          axios
+            .get(`/${endpoint}?${new URLSearchParams(params).toString()}`, {
+              responseType: "blob", // Always fetch as blob
+            })
+            .then((response) => {
+              const contentType = response.headers["content-type"];
+              const resultElement = document.getElementById(resultElementId);
+
+              if (contentType && contentType.includes("image/png")) {
+                // For binary responses (PNG)
+                const url = URL.createObjectURL(response.data);
+                resultElement.innerHTML = `<img src="${url}" alt="Permission Tree">`;
+              } else {
+                // For text responses (SVG or JSON)
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                  if (contentType && contentType.includes("application/json")) {
+                    resultElement.innerText = JSON.stringify(
+                      JSON.parse(e.target.result),
+                      null,
+                      2
+                    );
+                  } else {
+                    resultElement.innerHTML = e.target.result;
+                  }
+                };
+                reader.readAsText(response.data);
+              }
+            })
+            .catch((error) => {
+              document.getElementById(
+                resultElementId
+              ).innerText = `Error: ${error}`;
+            });
         });
       }
 
@@ -177,6 +260,31 @@
         "expand-permission-tree",
         "expandPermissionTreeResult"
       );
+      handleButtonClick(
+        "expandPermissionTreeImageButton",
+        "expand-permission-tree-image",
+        "expandPermissionTreeImageResult"
+      );
+      handleButtonClick(
+        "starshipRelationshipsButton",
+        "relationships/starship",
+        "starshipRelationshipsList"
+      );
+      handleButtonClick(
+        "starshipRoleRelationshipsButton",
+        "relationships/starship_role",
+        "starshipRoleRelationshipsList"
+      );
+      handleButtonClick(
+        "starshipSystemRelationshipsButton",
+        "relationships/starship_system",
+        "starshipSystemRelationshipsList"
+      );
+      handleButtonClick(
+        "userRelationshipsButton",
+        "relationships/user",
+        "userRelationshipsList"
+      );
 
       // Function to fill input fields with provided data
       function fillFields(form, data) {
@@ -198,7 +306,9 @@
 
       // Event listeners for example data
       document.querySelectorAll(".example-data").forEach((el) => {
-        el.addEventListener("click", function () {
+        el.addEventListener("click", function (e) {
+          e.stopPropagation();
+          e.preventDefault();
           let form = getParentForm(this);
           const data = JSON.parse(this.getAttribute("data-values"));
           fillFields(form, data);

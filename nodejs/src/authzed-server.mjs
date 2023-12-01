@@ -1,3 +1,4 @@
+import { execSync } from "child_process";
 import { v1 } from "@authzed/authzed-node";
 import fs from "fs";
 import path from "path";
@@ -9,7 +10,6 @@ import {
   createRelationship,
   createRelationshipStr,
   createCheckPermissionRequest,
-  createPermissionRequestStr,
   simplifyPermissionRelationshipTree,
 } from "./lib/authzed.mjs";
 import fastify from "fastify";
@@ -43,6 +43,22 @@ app.get("/relationships", async (request, reply) => {
     list = list.concat(result.relationships.map(createRelationshipStr));
     return list;
   }, []);
+});
+
+app.get("/relationships/starship", async (request, reply) => {
+  return await readResourceRelationships("starship");
+});
+
+app.get("/relationships/starship_role", async (request, reply) => {
+  return await readResourceRelationships("starship_role");
+});
+
+app.get("/relationships/starship_system", async (request, reply) => {
+  return await readResourceRelationships("starship_system");
+});
+
+app.get("/relationships/user", async (request, reply) => {
+  return await readResourceRelationships("user");
 });
 
 app.get("/check", async (request, reply) => {
@@ -106,6 +122,35 @@ app.get("/expand-permission-tree", async (request, reply) => {
   }
 });
 
+app.get("/expand-permission-tree-image", async (request, reply) => {
+  try {
+    const { resource, permission, format } = request.query;
+    const permissionTree = await expandPermissionTree(resource, permission);
+    const dotString = toDot([permissionTree], { pretty: true, indent: 1 });
+
+    // Escape double quotes in dotString
+    const escapedDotString = dotString.replace(/"/g, '\\"');
+
+    // Determine the format (SVG or PNG) and set the appropriate Content-Type
+    let contentType, dotFormat;
+    if (format === "png") {
+      contentType = "image/png";
+      dotFormat = "png";
+    } else {
+      // Default to SVG if format is not specified or is not 'png'
+      contentType = "image/svg+xml";
+      dotFormat = "svg";
+    }
+
+    // Create a child process to get the output.
+    const cmd = `echo "${escapedDotString}" | dot -T${dotFormat}`;
+    const buffer = execSync(cmd);
+    reply.header("Content-Type", contentType).send(buffer);
+  } catch (err) {
+    reply.status(500).send(err.message);
+  }
+});
+
 app.get("/health", async (request, reply) => {
   return "OK";
 });
@@ -131,54 +176,6 @@ const readResourceRelationships = async (resourceType) => {
   )
     .map((relationshipResponse) => relationshipResponse.relationship)
     .map(createRelationshipStr);
-};
-
-const checkPermission = async (relationship) => {
-  const checkPermissionResponse = await client1.promises.checkPermission(
-    createCheckPermissionRequest(relationship)
-  );
-  return v1.CheckPermissionResponse_Permissionship[
-    checkPermissionResponse.permissionship
-  ];
-};
-
-const bulkCheckPermission = async (items) => {
-  const bulkCheckPermissionResponse =
-    await client1.promises.bulkCheckPermission(
-      v1.BulkCheckPermissionRequest.create({
-        items: items.map(createCheckPermissionRequest),
-      })
-    );
-
-  return bulkCheckPermissionResponse.pairs.reduce((obj, pair) => {
-    const { request, response } = pair;
-
-    let responseStr;
-    if (response.oneofKind === "item") {
-      responseStr =
-        v1.CheckPermissionResponse_Permissionship[response.item.permissionship];
-    } else if (response.oneofKind === "error") {
-      responseStr = v1.CheckPermissionResponse_ErrorCode[response.error.code];
-    } else {
-      responseStr = "unknown";
-    }
-
-    obj[createPermissionRequestStr(request)] = responseStr;
-    return obj;
-  }, {});
-};
-
-const bulkExportRelationships = async () => {
-  const bulkExportRelationships = await client1
-    .bulkExportRelationships({
-      optionalLimit: 100,
-    })
-    .toArray();
-
-  return bulkExportRelationships.reduce((list, result) => {
-    list = list.concat(result.relationships.map(createRelationshipStr));
-    return list;
-  }, []);
 };
 
 const lookupSubjects = async (subjectObjectType, permission, resource) => {
@@ -252,26 +249,6 @@ await client1.promises.writeRelationships(
   })
 );
 
-console.log(
-  "starship relationships:",
-  await readResourceRelationships("starship")
-);
-
-console.log(
-  "starship_role relationships:",
-  await readResourceRelationships("starship_role")
-);
-
-console.log(
-  "starship_system relationships:",
-  await readResourceRelationships("starship_system")
-);
-
-console.log("user relationships:", await readResourceRelationships("user"));
-console.log("");
-
-console.log("Export all relationships:", await bulkExportRelationships());
-
 const expandPermissionTree = async (resource, permission) => {
   const expandPermissionTreeResponse =
     await client1.promises.expandPermissionTree(
@@ -285,35 +262,3 @@ const expandPermissionTree = async (resource, permission) => {
     expandPermissionTreeResponse?.treeRoot
   );
 };
-
-console.log(
-  "Permission tree of starship_system:enterprise_bridge#operate",
-  JSON.stringify(
-    await expandPermissionTree("starship_system:enterprise_bridge", "operate"),
-    undefined,
-    " "
-  )
-);
-
-console.log(
-  "Permission tree of starship_system:sickbay#operate",
-  JSON.stringify(
-    await expandPermissionTree("starship_system:sickbay", "operate"),
-    undefined,
-    " "
-  )
-);
-
-console.log(
-  toDot(
-    [
-      await expandPermissionTree(
-        "starship_system:enterprise_bridge",
-        "operate"
-      ),
-      await expandPermissionTree("starship_system:sickbay", "operate"),
-    ],
-    { pretty: true, indent: 1 }
-  ),
-  "\n"
-);

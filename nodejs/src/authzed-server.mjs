@@ -2,6 +2,7 @@ import { v1 } from "@authzed/authzed-node";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { toDot } from "./dot.mjs";
 
 const getFileContents = (filePath) => {
   const __filename = fileURLToPath(import.meta.url);
@@ -234,9 +235,8 @@ const simplifyPermissionTree = (permissionRelationshipTree) => {
     const operation = v1.AlgebraicSubjectSet_Operation[intermediate.operation];
     const children = intermediate.children.map(simplifyPermissionTree);
 
-    // Skip UNION with 1 child.
+    // Skip UNIONs with only 1 child.
     if (operation === "UNION" && children.length === 1) {
-      console.log("UNION with 1 child", permissionRelationshipTree);
       return children[0];
     }
 
@@ -425,166 +425,16 @@ console.log(
   )
 );
 
-/**
- *
- * `dot -Tpng -o output.png input.dot`
- * `imgcat output.png`
- *
- * @param {*} data
- * @returns
- */
-function toDot(data) {
-  const operationFillColor = "#d3d3e3";
-
-  class Dot {
-    constructor() {
-      this.i = 1;
-      this.lines = ["digraph G {"];
-      this.level = 1;
-    }
-
-    addCluster(label, node) {
-      const id = this.i++;
-      this.push(`subgraph cluster_${id} {`);
-      this.level++;
-      this.push(`style="dashed";`);
-      this.push(`label="${label}";`);
-      this.addNode(node);
-      this.level--;
-      this.push(`}`);
-      return id;
-    }
-
-    addLabelNode(label, options) {
-      const id = this.i++;
-      this.push(`${id} [label="${label}"${createNodeProperties(options)}];`);
-      return id;
-    }
-
-    addHtmlNode(html, options) {
-      const properties = createNodeProperties({
-        shape: "plain",
-        ...(options || {}),
-      });
-      const id = this.i++;
-      this.push(`${id} [label=<${html}>${properties}];`);
-      return id;
-    }
-
-    addEdge(from, to, label) {
-      if (label) {
-        this.push(`${from} -> ${to} [label="${label}"];`);
-      } else {
-        this.push(`${from} -> ${to};`);
-      }
-    }
-
-    addNode(node, parentId) {
-      if (node.children) {
-        const objectRelationId = this.addHtmlNode(
-          createOutlinedListHtml([node.relation, node.object]),
-          { color: "black" }
-        );
-
-        const operationId = this.addLabelNode(node.operation.toLowerCase(), {
-          shape: node.operation === "UNION" ? "trapezium" : "invtrapezium",
-          fillcolor: operationFillColor,
-          color: operationFillColor,
-          style: "filled",
-        });
-
-        this.addEdge(objectRelationId, operationId);
-
-        node.children.forEach((child) => this.addNode(child, operationId));
-
-        if (parentId) {
-          this.addEdge(parentId, objectRelationId);
-        }
-      }
-
-      if (node.subjects) {
-        const objectRelationId = this.addHtmlNode(
-          createOutlinedListHtml([node.relation, node.object]),
-          { color: "black" }
-        );
-
-        const subjectListId = this.addHtmlNode(
-          createOutlinedListHtml(node.subjects, { align: "left" }),
-          { color: "none" }
-        );
-
-        this.addEdge(objectRelationId, subjectListId);
-
-        if (parentId) {
-          this.addEdge(parentId, objectRelationId);
-        }
-      }
-    }
-
-    push(line) {
-      this.lines.push(" ".repeat(this.level) + line);
-    }
-  }
-
-  const createNodeProperties = (options) =>
-    Object.entries(options)
-      .map(([key, value]) => {
-        return `, ${key}="${value}"`;
-      }, [])
-      .join("");
-
-  const createRowsHtml = (rows, options) => {
-    const { align = "center", ...tableAttributes } = options || {};
-    let tableAttributesStr = Object.entries(
-      Object.assign(
-        {
-          border: 0,
-          cellspacing: 0,
-          cellpadding: 1,
-          cellborder: 1,
-        },
-        tableAttributes || {}
-      )
-    )
-      .map(([key, value]) => ` ${key}="${value}"`)
-      .join("");
-    let html = `<table${tableAttributesStr}>`;
-    rows.forEach((row) => {
-      html += `<tr><td align="${align}">${row}</td></tr>`;
-    });
-    html += `</table>`;
-    return html;
-  };
-
-  const createOutlinedListHtml = (list, tableAttributes) => {
-    return createRowsHtml(
-      [
-        createRowsHtml(list, {
-          align: "center",
-          cellborder: 0,
-          ...(tableAttributes || {}),
-        }),
-      ],
-      {
-        align: "center",
-        cellborder: 1,
-        cellpadding: 4,
-      }
-    );
-  };
-
-  const dot = new Dot();
-
-  data.forEach((item, i) => dot.addCluster(i, item));
-  dot.level--;
-  dot.push(`}`);
-  return dot.lines.join("\n");
-}
-
 console.log(
-  toDot([
-    await expandPermissionTree("starship_system:enterprise_bridge", "operate"),
-    await expandPermissionTree("starship_system:sickbay", "operate"),
-  ]),
+  toDot(
+    [
+      await expandPermissionTree(
+        "starship_system:enterprise_bridge",
+        "operate"
+      ),
+      await expandPermissionTree("starship_system:sickbay", "operate"),
+    ],
+    { pretty: true, indent: 1 }
+  ),
   "| dot -Tpng | imgcat"
 );

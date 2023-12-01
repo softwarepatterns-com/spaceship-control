@@ -3,9 +3,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const token = "my_laptop_dev";
-const endpoint = "localhost:50051";
-
 const getFileContents = (filePath) => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -13,11 +10,10 @@ const getFileContents = (filePath) => {
   return fs.readFileSync(resolvedFilePath);
 };
 
-const client1 = v1.NewClientWithCustomCert(
-  token,
-  endpoint,
-  getFileContents("../../data/certs/ca.crt")
-);
+const token = "my_laptop_dev";
+const endpoint = "localhost:50051";
+const cert = getFileContents("../../data/certs/ca.crt");
+const client1 = v1.NewClientWithCustomCert(token, endpoint, cert);
 
 /**
  *
@@ -57,15 +53,38 @@ const createRelationship = (str) => {
     throw new Error(`Invalid relationship string ${str}`);
   }
 
-  const resource = createObject(objectReferenceStr);
-
-  const subject = createSubject(subjectReferenceStr);
-
   return v1.Relationship.create({
-    resource,
+    resource: createObject(objectReferenceStr),
     relation,
-    subject,
+    subject: createSubject(subjectReferenceStr),
   });
+};
+
+const createObjectStr = (object) => {
+  const { objectType, objectId } = object;
+  return `${objectType}:${objectId}`;
+};
+
+const createRelationshipStr = (relationship) => {
+  const { resource, relation, subject } = relationship;
+  const resourceStr = createObjectStr(resource);
+  let subjectStr = createObjectStr(subject.object);
+  if (subject.optionalRelation) {
+    subjectStr += `#${subject.optionalRelation}`;
+  }
+
+  return `${resourceStr}#${relation}@${subjectStr}`;
+};
+
+const createPermissionRequestStr = (permissionCheckRequest) => {
+  const { resource, permission, subject } = permissionCheckRequest;
+  const resourceStr = createObjectStr(resource);
+  let subjectStr = createObjectStr(subject.object);
+  if (subject.optionalRelation) {
+    subjectStr += `#${subject.optionalRelation}`;
+  }
+
+  return `${resourceStr}#${permission}@${subjectStr}`;
 };
 
 /**
@@ -82,14 +101,10 @@ const createCheckPermissionRequest = (str) => {
     throw new Error(`Invalid relationship string ${str}`);
   }
 
-  const resource = createObject(objectReferenceStr);
-
-  const subject = createSubject(subjectReferenceStr);
-
   return v1.CheckPermissionRequest.create({
-    resource,
+    resource: createObject(objectReferenceStr),
     permission,
-    subject,
+    subject: createSubject(subjectReferenceStr),
   });
 };
 
@@ -101,16 +116,7 @@ const readResourceRelationships = async (resourceType) => {
   );
   return readRelationshipsResponse
     .map((relationshipResponse) => relationshipResponse.relationship)
-    .map((relationship) => {
-      const { resource, relation, subject } = relationship;
-      const resourceStr = `${resource.objectType}:${resource.objectId}`;
-      let subjectStr = `${subject.object.objectType}:${subject.object.objectId}`;
-      if (subject.optionalRelation) {
-        subjectStr += `#${subject.optionalRelation}`;
-      }
-
-      return `${resourceStr}#${relation}@${subjectStr}`;
-    });
+    .map(createRelationshipStr);
 };
 
 const checkPermission = async (questionDescription, relationship) => {
@@ -137,12 +143,6 @@ const bulkCheckPermission = async (items) => {
     "bulkCheckPermission:",
     bulkCheckPermissionResponse.pairs.reduce((obj, pair) => {
       const { request, response } = pair;
-      const { resource, subject, permission } = request;
-      const resourceStr = `${resource.objectType}:${resource.objectId}`;
-      let subjectStr = `${subject.object.objectType}:${subject.object.objectId}`;
-      if (subject.optionalRelation) {
-        subjectStr += `#${subject.optionalRelation}`;
-      }
 
       let responseStr;
       if (response.oneofKind === "item") {
@@ -156,11 +156,100 @@ const bulkCheckPermission = async (items) => {
         responseStr = "unknown";
       }
 
-      obj[`${resourceStr}#${permission}@${subjectStr}`] = responseStr;
+      obj[createPermissionRequestStr(request)] = responseStr;
       return obj;
     }, {})
   );
 };
+
+const bulkExportRelationships = async () => {
+  const bulkExportRelationships = await client1
+    .bulkExportRelationships({
+      optionalLimit: 100,
+    })
+    .toArray();
+  console.log(
+    "bulkExportRelationships:",
+    bulkExportRelationships.reduce((list, result) => {
+      list = list.concat(result.relationships.map(createRelationshipStr));
+      return list;
+    }, [])
+  );
+};
+
+const lookupSubjects = async (subjectObjectType, permission, resource) => {
+  const lookupSubjectsResponse = await client1.promises.lookupSubjects(
+    v1.LookupSubjectsRequest.create({
+      subjectObjectType,
+      permission,
+      resource: createObject(resource),
+    })
+  );
+
+  return lookupSubjectsResponse.reduce((list, lookupSubjectsResponseItem) => {
+    const { subjectObjectId, permissionship } =
+      lookupSubjectsResponseItem.subject;
+    list[subjectObjectId] = v1.LookupPermissionship[permissionship];
+    return list;
+  }, {});
+};
+
+const lookupResources = async (resourceObjectType, permission, subject) => {
+  const lookupResourcesResponse = await client1.promises.lookupResources(
+    v1.LookupResourcesRequest.create({
+      resourceObjectType,
+      permission,
+      subject: createSubject(subject),
+    })
+  );
+
+  return lookupResourcesResponse.reduce((list, lookupResourcesResponseItem) => {
+    const { resourceObjectId, permissionship } = lookupResourcesResponseItem;
+    list[resourceObjectId] = v1.LookupPermissionship[permissionship];
+    return list;
+  }, {});
+};
+
+/**
+ * @param {PermissionRelationshipTree} permissionTree
+ */
+const simplifyPermissionTree = (permissionRelationshipTree) => {
+  if (!permissionRelationshipTree) {
+    return null;
+  }
+
+  const obj = {
+    relation: permissionRelationshipTree.expandedRelation,
+    object: createObjectStr(permissionRelationshipTree.expandedObject),
+  };
+
+  const treeType = permissionRelationshipTree.treeType;
+  if (treeType.oneofKind === "leaf") {
+    const leaf = treeType.leaf;
+    obj.subjects = leaf.subjects.map((subject) =>
+      createObjectStr(subject.object)
+    );
+  } else if (treeType.oneofKind === "intermediate") {
+    const intermediate = treeType.intermediate;
+    const operation = v1.AlgebraicSubjectSet_Operation[intermediate.operation];
+    const children = intermediate.children.map(simplifyPermissionTree);
+
+    // Skip UNION with 1 child.
+    if (operation === "UNION" && children.length === 1) {
+      console.log("UNION with 1 child", permissionRelationshipTree);
+      return children[0];
+    }
+
+    obj.operation = operation;
+    obj.children = children;
+  } else {
+    console.log("unknown treeType", permissionRelationshipTree);
+  }
+
+  return obj;
+};
+
+// Start
 
 await client1.promises.writeSchema(
   v1.WriteSchemaRequest.create({
@@ -214,7 +303,6 @@ console.log(
 );
 
 console.log("user relationships:", await readResourceRelationships("user"));
-
 console.log("");
 
 // All true
@@ -266,6 +354,8 @@ await checkPermission(
   "starship_system:enterprise_bridge#operate@user:wesley"
 );
 
+// Bulk check
+
 await bulkCheckPermission([
   "starship_role:captain#user@user:picard",
   "starship_system:enterprise_bridge#operate@user:picard",
@@ -277,3 +367,224 @@ await bulkCheckPermission([
   "starship_system:sickbay#operate@user:kirk",
   "starship_system:enterprise_bridge#operate@user:wesley",
 ]);
+
+await bulkExportRelationships();
+
+console.log(
+  "Who can operate the Enterprise Bridge?",
+  await lookupSubjects("user", "operate", "starship_system:enterprise_bridge")
+);
+
+console.log(
+  "Who can operate the Sickbay?",
+  await lookupSubjects("user", "operate", "starship_system:sickbay")
+);
+
+console.log(
+  "What starship systems can Picard operate?",
+  await lookupResources("starship_system", "operate", "user:picard")
+);
+
+console.log(
+  "What starship systems can Wesley operate?",
+  await lookupResources("starship_system", "operate", "user:wesley")
+);
+
+console.log(
+  "What starship systems can Kirk operate?",
+  await lookupResources("starship_system", "operate", "user:kirk")
+);
+
+const expandPermissionTree = async (resource, permission) => {
+  const expandPermissionTreeResponse =
+    await client1.promises.expandPermissionTree(
+      v1.ExpandPermissionTreeRequest.create({
+        resource: createObject(resource),
+        permission,
+      })
+    );
+
+  return simplifyPermissionTree(expandPermissionTreeResponse?.treeRoot);
+};
+
+console.log(
+  "Permission tree of starship_system:enterprise_bridge#operate",
+  JSON.stringify(
+    await expandPermissionTree("starship_system:enterprise_bridge", "operate"),
+    undefined,
+    " "
+  )
+);
+
+console.log(
+  "Permission tree of starship_system:sickbay#operate",
+  JSON.stringify(
+    await expandPermissionTree("starship_system:sickbay", "operate"),
+    undefined,
+    " "
+  )
+);
+
+/**
+ *
+ * `dot -Tpng -o output.png input.dot`
+ * `imgcat output.png`
+ *
+ * @param {*} data
+ * @returns
+ */
+function toDot(data) {
+  const operationFillColor = "#d3d3e3";
+
+  class Dot {
+    constructor() {
+      this.i = 1;
+      this.lines = ["digraph G {"];
+      this.level = 1;
+    }
+
+    addCluster(label, node) {
+      const id = this.i++;
+      this.push(`subgraph cluster_${id} {`);
+      this.level++;
+      this.push(`style="dashed";`);
+      this.push(`label="${label}";`);
+      this.addNode(node);
+      this.level--;
+      this.push(`}`);
+      return id;
+    }
+
+    addLabelNode(label, options) {
+      const id = this.i++;
+      this.push(`${id} [label="${label}"${createNodeProperties(options)}];`);
+      return id;
+    }
+
+    addHtmlNode(html, options) {
+      const properties = createNodeProperties({
+        shape: "plain",
+        ...(options || {}),
+      });
+      const id = this.i++;
+      this.push(`${id} [label=<${html}>${properties}];`);
+      return id;
+    }
+
+    addEdge(from, to, label) {
+      if (label) {
+        this.push(`${from} -> ${to} [label="${label}"];`);
+      } else {
+        this.push(`${from} -> ${to};`);
+      }
+    }
+
+    addNode(node, parentId) {
+      if (node.children) {
+        const objectRelationId = this.addHtmlNode(
+          createOutlinedListHtml([node.relation, node.object]),
+          { color: "black" }
+        );
+
+        const operationId = this.addLabelNode(node.operation.toLowerCase(), {
+          shape: node.operation === "UNION" ? "trapezium" : "invtrapezium",
+          fillcolor: operationFillColor,
+          color: operationFillColor,
+          style: "filled",
+        });
+
+        this.addEdge(objectRelationId, operationId);
+
+        node.children.forEach((child) => this.addNode(child, operationId));
+
+        if (parentId) {
+          this.addEdge(parentId, objectRelationId);
+        }
+      }
+
+      if (node.subjects) {
+        const objectRelationId = this.addHtmlNode(
+          createOutlinedListHtml([node.relation, node.object]),
+          { color: "black" }
+        );
+
+        const subjectListId = this.addHtmlNode(
+          createOutlinedListHtml(node.subjects, { align: "left" }),
+          { color: "none" }
+        );
+
+        this.addEdge(objectRelationId, subjectListId);
+
+        if (parentId) {
+          this.addEdge(parentId, objectRelationId);
+        }
+      }
+    }
+
+    push(line) {
+      this.lines.push(" ".repeat(this.level) + line);
+    }
+  }
+
+  const createNodeProperties = (options) =>
+    Object.entries(options)
+      .map(([key, value]) => {
+        return `, ${key}="${value}"`;
+      }, [])
+      .join("");
+
+  const createRowsHtml = (rows, options) => {
+    const { align = "center", ...tableAttributes } = options || {};
+    let tableAttributesStr = Object.entries(
+      Object.assign(
+        {
+          border: 0,
+          cellspacing: 0,
+          cellpadding: 1,
+          cellborder: 1,
+        },
+        tableAttributes || {}
+      )
+    )
+      .map(([key, value]) => ` ${key}="${value}"`)
+      .join("");
+    let html = `<table${tableAttributesStr}>`;
+    rows.forEach((row) => {
+      html += `<tr><td align="${align}">${row}</td></tr>`;
+    });
+    html += `</table>`;
+    return html;
+  };
+
+  const createOutlinedListHtml = (list, tableAttributes) => {
+    return createRowsHtml(
+      [
+        createRowsHtml(list, {
+          align: "center",
+          cellborder: 0,
+          ...(tableAttributes || {}),
+        }),
+      ],
+      {
+        align: "center",
+        cellborder: 1,
+        cellpadding: 4,
+      }
+    );
+  };
+
+  const dot = new Dot();
+
+  data.forEach((item, i) => dot.addCluster(i, item));
+  dot.level--;
+  dot.push(`}`);
+  return dot.lines.join("\n");
+}
+
+console.log(
+  toDot([
+    await expandPermissionTree("starship_system:enterprise_bridge", "operate"),
+    await expandPermissionTree("starship_system:sickbay", "operate"),
+  ]),
+  "| dot -Tpng | imgcat"
+);

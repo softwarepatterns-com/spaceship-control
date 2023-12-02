@@ -1,11 +1,11 @@
 import { v1 } from "@authzed/authzed-node";
 
 /**
- * @param {String} str
+ * @param {String} str - i.e., starship_system:enterprise_bridge
  * @returns {v1.ObjectReference}
  */
 export const createObject = (str) => {
-  // starship_system:enterprise_bridge
+  console.log("createObject", str);
   const [objectType, objectId] = str.split(":");
   return v1.ObjectReference.create({ objectType, objectId });
 };
@@ -20,6 +20,7 @@ export const createObjectStr = (object) => {
  * @returns {v1.SubjectReference}
  */
 export const createSubject = (str) => {
+  console.log("createSubject", str);
   const [objectType, objectId] = str.split("#");
   return v1.SubjectReference.create({
     object: createObject(objectType),
@@ -27,12 +28,21 @@ export const createSubject = (str) => {
   });
 };
 
+export const createSubjectStr = (subject) => {
+  const { object, optionalRelation } = subject;
+  const objectStr = createObjectStr(object);
+  if (optionalRelation) {
+    return `${objectStr}#${optionalRelation}`;
+  }
+
+  return objectStr;
+};
+
 /**
- * @param {String} str
+ * @param {String} str - i.e., fleet:andorian_fleet#admiral@user:shran
  * @returns {v1.Relationship}
  */
 export const createRelationship = (str) => {
-  // fleet:andorian_fleet#admiral@user:shran
   const regex = /(.+)#(.+)@(.+)/;
   const matches = str.match(regex);
   const [_, objectReferenceStr, relation, subjectReferenceStr] = matches;
@@ -75,7 +85,6 @@ export const createPermissionRequestStr = (permissionCheckRequest) => {
  * @returns {v1.CheckPermissionRequest}
  */
 export const createCheckPermissionRequest = (str) => {
-  // starship_system:enterprise_bridge#operate@user:picard
   const regex = /(.+)#(.+)@(.+)/;
   const matches = str.match(regex);
 
@@ -93,46 +102,4 @@ export const createCheckPermissionRequest = (str) => {
     permission,
     subject: createSubject(subjectReferenceStr),
   });
-};
-
-/**
- * @param {PermissionRelationshipTree} permissionTree
- */
-export const simplifyPermissionRelationshipTree = (
-  permissionRelationshipTree
-) => {
-  if (!permissionRelationshipTree) {
-    return null;
-  }
-
-  const obj = {
-    relation: permissionRelationshipTree.expandedRelation,
-    object: createObjectStr(permissionRelationshipTree.expandedObject),
-  };
-
-  const treeType = permissionRelationshipTree.treeType;
-  if (treeType.oneofKind === "leaf") {
-    const leaf = treeType.leaf;
-    obj.subjects = leaf.subjects.map((subject) =>
-      createObjectStr(subject.object)
-    );
-  } else if (treeType.oneofKind === "intermediate") {
-    const intermediate = treeType.intermediate;
-    const operation = v1.AlgebraicSubjectSet_Operation[intermediate.operation];
-    const children = intermediate.children.map(
-      simplifyPermissionRelationshipTree
-    );
-
-    // Skip UNIONs with only 1 child.
-    if (operation === "UNION" && children.length === 1) {
-      return children[0];
-    }
-
-    obj.operation = operation;
-    obj.children = children;
-  } else {
-    console.log("unknown treeType", permissionRelationshipTree);
-  }
-
-  return obj;
 };

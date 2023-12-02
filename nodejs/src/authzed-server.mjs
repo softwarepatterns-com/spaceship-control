@@ -7,10 +7,10 @@ import { toDot } from "./lib/dot.mjs";
 import {
   createObject,
   createSubject,
-  createRelationship,
+  createObjectStr,
+  createSubjectStr,
   createRelationshipStr,
   createCheckPermissionRequest,
-  simplifyPermissionRelationshipTree,
 } from "./lib/authzed.mjs";
 import fastify from "fastify";
 
@@ -45,20 +45,9 @@ app.get("/relationships", async (request, reply) => {
   }, []);
 });
 
-app.get("/relationships/starship", async (request, reply) => {
-  return await readResourceRelationships("starship");
-});
-
-app.get("/relationships/starship_role", async (request, reply) => {
-  return await readResourceRelationships("starship_role");
-});
-
-app.get("/relationships/starship_system", async (request, reply) => {
-  return await readResourceRelationships("starship_system");
-});
-
-app.get("/relationships/user", async (request, reply) => {
-  return await readResourceRelationships("user");
+app.get("/relationships/:resource", async (request, reply) => {
+  const { resource } = request.params;
+  return await readResourceRelationships(resource);
 });
 
 app.get("/check", async (request, reply) => {
@@ -127,6 +116,8 @@ app.get("/expand-permission-tree-image", async (request, reply) => {
     const { resource, permission, format } = request.query;
     const permissionTree = await expandPermissionTree(resource, permission);
     const dotString = toDot([permissionTree], { pretty: true, indent: 1 });
+
+    console.log("dotString", dotString);
 
     // Escape double quotes in dotString
     const escapedDotString = dotString.replace(/"/g, '\\"');
@@ -211,54 +202,105 @@ const lookupResources = async (resourceObjectType, permission, subject) => {
   }, {});
 };
 
-// Start
+/**
+ *
+ * @param {String} resourceStr
+ * @param {String} permission
+ * @returns
+ */
+const expandPermissionTree = async (resourceStr, permission) => {
+  console.log("expandPermissionTree", resourceStr, permission);
 
-await client1.promises.writeSchema(
-  v1.WriteSchemaRequest.create({
-    schema: getFileContents("../../star-trek.zed"),
-  })
-);
-
-const readSchemaResponse = await client1.promises.readSchema({});
-console.log(`\n${readSchemaResponse?.schemaText}\n`);
-
-const relationshipUpdates = [
-  "starship_role:captain#user@user:picard",
-  "starship_role:starfleet#user@user:picard",
-  "starship_role:captain#user@user:kirk",
-  "starship_role:starfleet#user@user:kirk",
-  "starship_role:starfleet#user@user:wesley",
-  "starship:enterprise#crew_member@user:picard",
-  "starship:enterprise#crew_member@user:wesley",
-  "starship_system:enterprise_bridge#starship@starship:enterprise",
-  "starship_system:enterprise_bridge#role@starship_role:captain#user",
-  "starship_system:sickbay#starship@starship:enterprise",
-  "starship_system:sickbay#role@starship_role:starfleet#user",
-]
-  .map(createRelationship)
-  .map((relationship) =>
-    v1.RelationshipUpdate.create({
-      operation: v1.RelationshipUpdate_Operation.TOUCH, // UPSERT
-      relationship,
-    })
-  );
-
-await client1.promises.writeRelationships(
-  v1.WriteRelationshipsRequest.create({
-    updates: relationshipUpdates,
-  })
-);
-
-const expandPermissionTree = async (resource, permission) => {
   const expandPermissionTreeResponse =
     await client1.promises.expandPermissionTree(
       v1.ExpandPermissionTreeRequest.create({
-        resource: createObject(resource),
+        resource: createObject(resourceStr),
         permission,
       })
     );
+
+  console.log(
+    "expandPermissionTreeResponse",
+    JSON.stringify(expandPermissionTreeResponse, null, 2)
+  );
 
   return simplifyPermissionRelationshipTree(
     expandPermissionTreeResponse?.treeRoot
   );
 };
+
+/**
+ * @param {PermissionRelationshipTree} permissionTree
+ */
+export const simplifyPermissionRelationshipTree = async (
+  permissionRelationshipTree
+) => {
+  console.log(
+    "simplifyPermissionRelationshipTree",
+    JSON.stringify(permissionRelationshipTree, null, 2)
+  );
+
+  if (!permissionRelationshipTree) {
+    return null;
+  }
+
+  if (!permissionRelationshipTree.expandedObject) {
+    console.error(
+      "simplifyPermissionRelationshipTree: permissionRelationshipTree",
+      permissionRelationshipTree
+    );
+    throw new Error("expandedObject is not set");
+  }
+
+  const obj = {
+    relation: permissionRelationshipTree.expandedRelation,
+    object: createObjectStr(permissionRelationshipTree.expandedObject),
+  };
+
+  const subjects = [];
+  const children = [];
+  const treeType = permissionRelationshipTree.treeType;
+  if (treeType.oneofKind === "leaf") {
+    const leaf = treeType.leaf;
+
+    for (const subject of leaf.subjects) {
+      if (subject.optionalRelation) {
+        children.push(
+          await expandPermissionTree(
+            createObjectStr(subject.object),
+            subject.optionalRelation
+          )
+        );
+      } else {
+        subjects.push(createSubjectStr(subject));
+      }
+    }
+  } else if (treeType.oneofKind === "intermediate") {
+    const intermediate = treeType.intermediate;
+    const operation = v1.AlgebraicSubjectSet_Operation[intermediate.operation];
+
+    for (const child of intermediate.children) {
+      children.push(await simplifyPermissionRelationshipTree(child));
+    }
+
+    // Skip UNIONs with only 1 child.
+    if (operation === "UNION" && children.length === 1) {
+      return children[0];
+    }
+
+    obj.operation = operation;
+  } else {
+    console.log("unknown treeType", permissionRelationshipTree);
+  }
+
+  if (subjects.length) {
+    obj.subjects = subjects;
+  }
+  if (children.length) {
+    obj.children = children;
+  }
+
+  return obj;
+};
+
+console.log(`\n${(await client1.promises.readSchema({}))?.schemaText}\n`);

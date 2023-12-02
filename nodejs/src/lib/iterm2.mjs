@@ -1,6 +1,8 @@
 import { execSync } from "child_process";
 
 export const displayDotFile = (dotContent) => {
+  console.log("displayDotFile", dotContent);
+
   // Convert DOT to PNG and get the output as a Buffer
   const pngBuffer = execSync("dot -Tpng", { input: dotContent });
 

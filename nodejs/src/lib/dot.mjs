@@ -95,44 +95,39 @@ export class Dot {
   }
 
   addNode(node, parentId) {
-    if (node.children) {
-      const objectRelationId = this.addHtmlNode(
-        createOutlinedListHtml([node.relation, node.object]),
-        { color: "black" }
-      );
+    const nodeId = this.addHtmlNode(
+      createOutlinedListHtml([node.relation, node.object]),
+      { color: "black" }
+    );
 
-      const operationId = this.addLabelNode(node.operation.toLowerCase(), {
-        shape: node.operation === "UNION" ? "trapezium" : "invtrapezium",
-        fillcolor: operationFillColor,
-        color: operationFillColor,
-        style: "filled",
-      });
+    if (parentId) {
+      this.addEdge(parentId, nodeId);
+    }
 
-      this.addEdge(objectRelationId, operationId);
+    if (node.children && node.children.length > 0) {
+      if (node.operation) {
+        const operationId = this.addLabelNode(node.operation.toLowerCase(), {
+          shape: node.operation === "UNION" ? "trapezium" : "invtrapezium",
+          fillcolor: operationFillColor,
+          color: operationFillColor,
+          style: "filled",
+        });
 
-      node.children.forEach((child) => this.addNode(child, operationId));
+        this.addEdge(nodeId, operationId);
 
-      if (parentId) {
-        this.addEdge(parentId, objectRelationId);
+        node.children.forEach((child) => this.addNode(child, operationId));
+      } else {
+        node.children.forEach((child) => this.addNode(child, nodeId));
       }
     }
 
-    if (node.subjects) {
-      const objectRelationId = this.addHtmlNode(
-        createOutlinedListHtml([node.relation, node.object]),
-        { color: "black" }
-      );
-
+    if (node.subjects && node.subjects.length > 0) {
       const subjectListId = this.addHtmlNode(
         createOutlinedListHtml(node.subjects, { align: "left" }),
         { color: "none" }
       );
 
-      this.addEdge(objectRelationId, subjectListId);
-
-      if (parentId) {
-        this.addEdge(parentId, objectRelationId);
-      }
+      this.addEdge(nodeId, subjectListId);
     }
   }
 

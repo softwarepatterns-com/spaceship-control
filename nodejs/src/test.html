@@ -16,14 +16,59 @@
       <form id="checkPermissionForm">
         <div>
           Example:
-          <a
-            href="#"
-            class="example-data"
-            data-values='{"q":"starship_system:enterprise_bridge#operate@user:picard"}'
-            >starship_system:enterprise_bridge#operate@user:picard</a
-          >
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@user:alice"}'>
+            form:form_a#edit@user:alice
+          </a>
         </div>
-        <input type="text" id="q" placeholder="Enter query" />
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@user:charlie"}'>
+            form:form_a#edit@user:charlie
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@group:team_a"}'>
+            form:form_a#edit@group:team_a
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@group:location_a_area_manager"}'>
+            form:form_a#edit@group:location_a_area_manager
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@group:location_a_area_manager#member"}'>
+            form:form_a#edit@group:location_a_area_manager#member
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@form:form_a#viewer"}'>
+            form:form_a#edit@form:form_a#viewer
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_a#edit@form:form_a#editor"}'>
+            form:form_a#edit@form:form_a#editor
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_b#edit@user:alice"}'>
+            form:form_b#edit@user:alice
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"q":"form:form_b#edit@user:charlie"}'>
+            form:form_b#edit@user:charlie
+          </a>
+        </div>
+        <input type="text" id="q" placeholder="Enter query" size="70" />
         <button type="button" id="checkButton">Check</button>
       </form>
       <p id="checkResult"></p>
@@ -33,120 +78,123 @@
     <section>
       <h2>List Relationships</h2>
       <form id="listRelationshipsForm">
-        <button type="button" id="listRelationshipsButton">
-          List Relationships
-        </button>
+        <button type="button" id="listRelationshipsButton">List Relationships</button>
       </form>
-      <ul id="relationshipsList"></ul>
+      <pre id="relationshipsList"></pre>
     </section>
 
-    <!-- Section for Lookup Subjects -->
+    <!-- Section for Listing Relationships -->
     <section>
-      <h2>Lookup Subjects</h2>
+      <h2>List Resource Type Relationships</h2>
+      <form id="listResourceTypeRelationshipsForm">
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"resource":"form"}'> form </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"resource":"group"}'> group </a>
+        </div>
+        <input type="text" id="resource" placeholder="Enter query" />
+        <button type="button" id="listResourceTypeRelationshipsButton">List Resource Type Relationships</button>
+      </form>
+      <pre id="resourceTypeRelationshipsList"></pre>
+    </section>
 
-      <form id="lookupSubjectsForm">
+    <!-- Section for List Subjects -->
+    <section>
+      <h2>List Subjects</h2>
+
+      <form id="listSubjectsForm">
         <div>
           Example:
           <a
             href="#"
             class="example-data"
-            data-values='{"subjectObjectType":"user","permission":"operate","resource":"starship_system:enterprise_bridge"}'
-            >user, operate, starship_system:enterprise_bridge</a
+            data-values='{"resource":"form:form_a","permission":"view","subjectType":"user"}'
+            >form:form_a, view, user</a
           >
         </div>
-        <input
-          type="text"
-          id="subjectObjectType"
-          placeholder="Subject Object Type"
-        />
-        <input type="text" id="permission" placeholder="Permission" />
         <input type="text" id="resource" placeholder="Resource" />
-        <button type="button" id="lookupSubjectsButton">Lookup Subjects</button>
+        <input type="text" id="permission" placeholder="Permission" />
+        <input type="text" id="subjectType" placeholder="Subject Type" />
+        <button type="button" id="listSubjectsButton">List Subjects</button>
       </form>
-      <pre id="lookupSubjectsResult"></pre>
+      <pre id="subjectsResultList"></pre>
     </section>
 
-    <!-- Section for Lookup Resources -->
+    <!-- Section for List Resources -->
     <section>
-      <h2>Lookup Resources</h2>
+      <h2>List Resources</h2>
 
-      <form id="lookupResourcesForm">
+      <form id="listResourcesForm">
         <div>
           Example:
           <a
             href="#"
             class="example-data"
-            data-values='{"resourceObjectType":"starship_system","permission":"operate","subject":"user:picard"}'
-            >starship_system, operate, user:picard</a
+            data-values='{"subject":"user:alice","permission":"view","resourceType":"form"}'
+            >user:alice, view, form</a
           >
         </div>
-        <input
-          type="text"
-          id="resourceObjectType"
-          placeholder="Resource Object Type"
-        />
-        <input type="text" id="permission" placeholder="Permission" />
+        <div>
+          Example:
+          <a
+            href="#"
+            class="example-data"
+            data-values='{"subject":"user:charlie","permission":"view","resourceType":"form"}'
+            >user:charlie, view, form</a
+          >
+        </div>
         <input type="text" id="subject" placeholder="Subject" />
-        <button type="button" id="lookupResourcesButton">
-          Lookup Resources
-        </button>
+        <input type="text" id="permission" placeholder="Permission" />
+        <input type="text" id="resourceType" placeholder="Resource Type" />
+        <button type="button" id="listResourcesButton">List Resources</button>
       </form>
-      <pre id="lookupResourcesResult"></pre>
+      <pre id="resourcesResultList"></pre>
     </section>
 
     <!-- Section for Expand Permission Tree -->
     <section>
-      <h2>Expand Permission Tree</h2>
-
-      <form id="expandPermissionTreeForm">
-        <div>
-          Example:
-          <a
-            href="#"
-            class="example-data"
-            data-values='{"resource":"starship_system:enterprise_bridge","permission":"operate"}'
-            >starship_system:enterprise_bridge, operate</a
-          >
-        </div>
-        <input type="text" id="resource" placeholder="Resource" />
-        <input type="text" id="permission" placeholder="Permission" />
-        <button type="button" id="expandPermissionTreeButton">
-          Expand Tree
-        </button>
-      </form>
-      <pre id="expandPermissionTreeResult"></pre>
-    </section>
-
-    <section>
-      <h2>Expand Permission Tree (SVG/PNG)</h2>
-
+      <h2>Resource Permission Tree (json/dot/svg/png)</h2>
       <form id="expandPermissionTreeImageForm">
         <div>
           Example:
-          <a
-            href="#"
-            class="example-data"
-            data-values='{"resource":"starship_system:enterprise_bridge","permission":"operate"}'
-            >starship_system:enterprise_bridge, operate</a
-          >
+          <a href="#" class="example-data" data-values='{"resource":"form:form_a","permission":"view"}'>
+            form:form_a#view
+          </a>
+        </div>
+        <div>
+          Example:
+          <a href="#" class="example-data" data-values='{"resource":"form:form_a","permission":"edit"}'>
+            form:form_a#edit
+          </a>
         </div>
         <input type="text" id="resource" placeholder="Resource" />
         <input type="text" id="permission" placeholder="Permission" />
         <select id="format">
+          <option value="json">JSON</option>
+          <option value="dot">DOT</option>
           <option value="svg">SVG</option>
           <option value="png">PNG</option>
         </select>
-        <button type="button" id="expandPermissionTreeImageButton">
-          Expand Tree
-        </button>
+        <button type="button" id="expandPermissionTreeImageButton">Expand Tree</button>
       </form>
-      <div id="expandPermissionTreeImageResult"></div>
+      <pre id="expandPermissionTreeImageResult"></pre>
     </section>
 
     <script>
+      function encode(str) {
+        return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
       // Generic function to send GET requests and update the result
       function handleButtonClick(buttonId, endpoint, resultElementId) {
         const button = document.getElementById(buttonId);
+        if (button === null) {
+          console.error(`Button ${buttonId} not found`);
+          return;
+        }
         button.addEventListener("click", (e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -174,72 +222,32 @@
                 const reader = new FileReader();
                 reader.onload = function (e) {
                   if (contentType && contentType.includes("application/json")) {
-                    resultElement.innerText = JSON.stringify(
-                      JSON.parse(e.target.result),
-                      null,
-                      2
-                    );
-                  } else {
+                    resultElement.innerText = JSON.stringify(JSON.parse(e.target.result), null, 1);
+                  } else if (contentType && contentType.includes("image/svg+xml")) {
                     resultElement.innerHTML = e.target.result;
+                  } else {
+                    resultElement.innerHTML = encode(e.target.result);
                   }
                 };
                 reader.readAsText(response.data);
               }
             })
             .catch((error) => {
-              document.getElementById(
-                resultElementId
-              ).innerText = `Error: ${error}`;
+              document.getElementById(resultElementId).innerText = `Error: ${error}`;
             });
         });
       }
 
       // Attach event handlers to buttons
       handleButtonClick("checkButton", "check", "checkResult");
-      handleButtonClick(
-        "listRelationshipsButton",
-        "relationships",
-        "relationshipsList"
-      );
-      handleButtonClick(
-        "lookupSubjectsButton",
-        "lookup-subjects",
-        "lookupSubjectsResult"
-      );
-      handleButtonClick(
-        "lookupResourcesButton",
-        "lookup-resources",
-        "lookupResourcesResult"
-      );
-      handleButtonClick(
-        "expandPermissionTreeButton",
-        "expand-permission-tree",
-        "expandPermissionTreeResult"
-      );
+      handleButtonClick("listRelationshipsButton", "relationships", "relationshipsList");
+      handleButtonClick("listResourceTypeRelationshipsButton", "relationships", "resourceTypeRelationshipsList");
+      handleButtonClick("listSubjectsButton", "subjects", "subjectsResultList");
+      handleButtonClick("listResourcesButton", "resources", "resourcesResultList");
       handleButtonClick(
         "expandPermissionTreeImageButton",
-        "expand-permission-tree-image",
+        "resource-permission-tree",
         "expandPermissionTreeImageResult"
-      );
-      handleButtonClick(
-        "starshipRelationshipsButton",
-        "relationships/starship",
-        "starshipRelationshipsList"
-      );
-      handleButtonClick(
-        "starshipRoleRelationshipsButton",
-        "relationships/starship_role",
-        "starshipRoleRelationshipsList"
-      );
-      handleButtonClick(
-        "starshipSystemRelationshipsButton",
-        "relationships/starship_system",
-        "starshipSystemRelationshipsList"
-      );
-      handleButtonClick(
-        "userRelationshipsButton",
-        "relationships/user",
-        "userRelationshipsList"
       );
 
       // Function to fill input fields with provided data

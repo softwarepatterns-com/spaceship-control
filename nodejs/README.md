@@ -1,5 +1,11 @@
 # Spaceship Control NodeJS
 
+## Run
+
+```zsh
+node ./src/authzed-server.mjs --token="my_laptop_dev" --endpoint="localhost:50051" --cert="../data/certs/ca.crt"
+```
+
 Can test the openssl of the server with:
 
 ```zsh
